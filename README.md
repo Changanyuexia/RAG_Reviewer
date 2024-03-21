@@ -15,7 +15,11 @@ CRer. Dataset: https://github.com/microsoft/CodeBERT/tree/master/CodeReviewer
 
 ### Data Structure
 
-Each datasets have jsonl and csv form. jsonl is for dpr retrieval and csv is for gpm and normal retrieval.
+Each datasets have jsonl and csv form. 
+
+jsonl is for dpr retrieval.
+
+csv is for gpm and normal retrieval.
 
 ### Data Processing
 
