@@ -31,6 +31,8 @@ Only clean CRer. dataset: replaces newline ("\n") and tab ("\t") characters with
 We provide three retriver files: gpm_retrieval, normal_retrieval and dpr_retrieval. 
 
 Our dpr code comes from: https://github.com/rizwan09/REDCODER/tree/main/SCODE-R
+In gpm_retrieval, gpm_code2embedding.py is to generate the retrieval results of gpm retrieval. (CodeBERT + cosine similarity)
+In normal_retrieval, code2embedding.py is to generate the retrieval results of normal retrieval. (CodeBERT + cosine similarity & gpm similarity)
 
 
 ## Generator
