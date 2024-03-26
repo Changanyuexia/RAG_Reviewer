@@ -51,9 +51,7 @@ python prompt_review_generate.py \
     --Top_k $Top_k \
     --test_top10_path ../../retriever/gpm_retrieval/${Dataset}/test_top10.csv \
     --input_file input/${Dataset}/model_input_top_${Top_k}.jsonl
-
-
-
+```
 
 Then generate.py is for generating the target review.
 
