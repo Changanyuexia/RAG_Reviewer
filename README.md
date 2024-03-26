@@ -54,7 +54,7 @@ python prompt_review_generate.py \
 ```
 
 Then generate.py is for generating the target review.
-
+```bash
 
 Topk=1
 Dataset="tf"
@@ -65,4 +65,5 @@ python generate.py \
     --output_file output/${Dataset}/generate_${Topk}_m7b.jsonl \
     --evaluation_file output/${Dataset}/eval_${Topk}_m7b.jsonl
 
+```
 
