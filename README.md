@@ -1,4 +1,4 @@
-# Project Name
+# RARe
 
 This replication package is created for the paper "Code Review Automation using Retrieval Augmented Generation"
 
