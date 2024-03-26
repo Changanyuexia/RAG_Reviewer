@@ -39,6 +39,8 @@ We provide two generative methods: fine-tuning and prompt tuning.
 
 Fine-tuning code comes from: https://github.com/hiyouga/LLaMA-Factory/tree/main
 
+And we provide the json file for prompt in fine-tuning.
+
 The input of Generator should be the best performer of retriever. In this case, it is gpm_retriever.
 
 prompt_review_generate.py is for generating prompts.
