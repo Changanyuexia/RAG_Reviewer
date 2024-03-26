@@ -41,7 +41,6 @@ Fine-tuning code comes from: https://github.com/hiyouga/LLaMA-Factory/tree/main
 prompt_review_generate.py is for generating prompts.
 
 ```bash
-# Example command to install dependencies
 
 Top_k=0
 Dataset="tf"
@@ -49,11 +48,6 @@ python prompt_review_generate.py \
     --Top_k $Top_k \
     --test_top10_path dataset/${Dataset}/gpm_retrieval/test_top10.csv \
     --input_file input/${Dataset}/model_input_top_${Top_k}.jsonl \
-    --output_file output/${Dataset}/${Dataset}_result.jsonl
 
-## Getting Started
 
-```bash
-# Example command to install dependencies
-pip install -r requirements.txt
 
