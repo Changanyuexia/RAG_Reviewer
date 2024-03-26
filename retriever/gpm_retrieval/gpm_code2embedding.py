@@ -23,11 +23,11 @@ path = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 def create_arg_parser():
     parser = argparse.ArgumentParser()
-    parser.add_argument("-train", '--train', default=os.path.join(path, "../../data/tf/train.csv"), type=str,
+    parser.add_argument("-train", '--train', default=os.path.join(path, "../data/cc/train.csv"), type=str,
                         help="path of train file")
-    parser.add_argument("-test", '--test', default=os.path.join(path, "../../data/tf/test.csv"), type=str,
+    parser.add_argument("-test", '--test', default=os.path.join(path, "../data/cc/test.csv"), type=str,
                         help="path to test file")
-    parser.add_argument("-val", '--val', default=os.path.join(path, "../../data/tf/val.csv"), type=str,
+    parser.add_argument("-val", '--val', default=os.path.join(path, "../data/cc/val.csv"), type=str,
                         help="path of val file")
     parser.add_argument("-embedding", '--embedding_model', default="microsoft/codebert-base", type=str,
                         help="choose one embedding_model")
@@ -148,13 +148,37 @@ if __name__ == '__main__':
                 embeddings.append(batch_embeddings)
         return np.vstack(embeddings)
 
-    # 获取嵌入
+    # get embeddings
     train_embedding = get_embeddings(train["code"])
     test_embedding = get_embeddings(test["code"])
     val_embedding = get_embeddings(val["code"])
+    
 
-    # 计算相似度并保存结果
-    cosine_similarity = get_cosine_similarity(train_embedding, train_embedding)
-    topk_predictions = predictionTopk(10, cosine_similarity, train, train)
-    final_df = integrate_predictions(train, topk_predictions)
-    final_df.to_csv("../../data/tf/train_top10.csv", index=False)
+    # calculate similarity and save files
+    def generate_topk_predictions(data, embeddings, file_name, k=10):
+        """
+        Generates top-k predictions for a given dataset and saves the result to a CSV file.
+    
+        Parameters:
+        - data: The dataset for which predictions are to be made.
+        - embeddings: The embeddings corresponding to the dataset.
+        - file_name: Name of the output CSV file.
+        - k: The number of top predictions to generate.
+        """
+        # Calculate cosine similarity for the embeddings
+        cosine_similarity = get_cosine_similarity(embeddings, embeddings)
+    
+        # Get top-k predictions
+        topk_predictions = predictionTopk(k, cosine_similarity, data, data)
+    
+        # Integrate predictions with the original dataset
+        final_df = integrate_predictions(data, topk_predictions)
+    
+        # Save the results to a CSV file
+        final_df.to_csv(file_name, index=False)
+
+    # Example usage:
+    generate_topk_predictions(train, train_embedding, "cc/train_top10.csv")
+    generate_topk_predictions(val, val_embedding, "cc/val_top10.csv")
+    generate_topk_predictions(test, test_embedding, "cc/test_top10.csv")
+

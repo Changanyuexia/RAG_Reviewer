@@ -23,11 +23,11 @@ path = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 def create_arg_parser():
     parser = argparse.ArgumentParser()
-    parser.add_argument("-train", '--train', default=os.path.join(path, "data/cc/train.csv"), type=str,
+    parser.add_argument("-train", '--train', default=os.path.join(path, "../data/cc/train.csv"), type=str,
                         help="path of train file")
-    parser.add_argument("-test", '--test', default=os.path.join(path, "data/cc/test.csv"), type=str,
+    parser.add_argument("-test", '--test', default=os.path.join(path, "../data/cc/test.csv"), type=str,
                         help="path to test file")
-    parser.add_argument("-val", '--val', default=os.path.join(path, "data/cc/val.csv"), type=str,
+    parser.add_argument("-val", '--val', default=os.path.join(path, "../data/cc/val.csv"), type=str,
                         help="path of val file")
     parser.add_argument("-embedding", '--embedding_model', default="microsoft/codebert-base", type=str,
                         help="choose one embedding_model")
@@ -132,6 +132,6 @@ if __name__ == '__main__':
         reviews_df = pd.DataFrame(top_k_reviews, columns=[f'top_{i+1}' for i in range(args.topk)])
         merged_df = pd.concat([other_df.reset_index(drop=True), reviews_df], axis=1)
         merged_df.to_csv(save_path, index=False)
-    calculate_similarity_and_save(train_embedding, train_embedding, train, train_path.replace(".csv", "_top10.csv"))
-    calculate_similarity_and_save(train_embedding, test_embedding, test, test_path.replace(".csv", "_top10.csv"))
-    calculate_similarity_and_save(train_embedding, val_embedding, val, val_path.replace(".csv", "_top10.csv"))
+    calculate_similarity_and_save(train_embedding, train_embedding, train, "cc/train_top10.csv")
+    calculate_similarity_and_save(train_embedding, test_embedding, test, "cc/test_top10.csv")
+    calculate_similarity_and_save(train_embedding, val_embedding, val, "cc/val_top10.csv")
