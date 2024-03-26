@@ -10,7 +10,6 @@ This replication package is created for the paper "Code Review Automation using 
 
 ### Complete datasets downloads from: 
 Tuf. Dataset: https://github.com/RosaliaTufano/code_review_automation 
-
 CRer. Dataset: https://github.com/microsoft/CodeBERT/tree/master/CodeReviewer
 
 ### Data Structure
@@ -20,6 +19,8 @@ Each datasets have jsonl and csv form.
 jsonl is for dpr retrieval.
 
 csv is for gpm and normal retrieval.
+
+Note: we provide the example data, not the whole dataset.
 
 ### Data Processing
 
@@ -44,9 +45,24 @@ prompt_review_generate.py is for generating prompts.
 
 ```bash
 
-Top_k=0
+Top_k=1
 Dataset="tf"
 python prompt_review_generate.py \
     --Top_k $Top_k \
-    --test_top10_path dataset/${Dataset}/gpm_retrieval/test_top10.csv \
-    --input_file input/${Dataset}/model_input_top_${Top_k}.jsonl \
+    --test_top10_path ../../retriever/gpm_retrieval/${Dataset}/test_top10.csv \
+    --input_file input/${Dataset}/model_input_top_${Top_k}.jsonl
+
+Then generate.py is for generating the target review.
+
+```bash
+
+Topk=1
+Dataset="tf"
+# Run the python script with arguments
+python generate.py \
+    --model mistralai/Mistral-7B-Instruct-v0.2 \
+    --input_file input/${Dataset}/model_input_top_${Topk}.jsonl \
+    --output_file output/${Dataset}/generate_${Topk}_m7b.jsonl \
+    --evaluation_file output/${Dataset}/eval_${Topk}_m7b.jsonl
+
+
