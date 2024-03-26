@@ -52,11 +52,11 @@ python prompt_review_generate.py \
     --test_top10_path ../../retriever/gpm_retrieval/${Dataset}/test_top10.csv \
     --input_file input/${Dataset}/model_input_top_${Top_k}.jsonl
 
+
+
+
 Then generate.py is for generating the target review.
 
-
-#
-```bash
 
 Topk=1
 Dataset="tf"
