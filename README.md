@@ -22,9 +22,6 @@ csv is for gpm and normal retrieval.
 
 Note: we provide the example data, not the whole dataset.
 
-### Data Processing
-
-Only clean CRer. dataset: replaces newline ("\n") and tab ("\t") characters with a single space and consolidates multiple spaces into one.
 
 ## Retriever
 
