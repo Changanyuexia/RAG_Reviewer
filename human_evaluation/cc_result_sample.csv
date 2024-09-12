@@ -1,0 +1,600 @@
+label,code,cc_gene_top0,cc_gene_top1,cc_pre_top0,cc_pre_top1,cc_gene_top0_classification,cc_gene_top1_classification,cc_pre_top0_classification,cc_pre_top1_classification
+No need to speficy attribute here. Moreover in yaml it is default to use lowercase names.,"@@ -1,11 +1,12 @@ package plugin type Config struct { - SocketPath string `yaml:path` - Volumes VolumesConfig `yaml:volume` + SocketDir string `yaml:socket_dir default:/run/docker/plugins` + Volumes VolumesConfig `yaml:volume` + GPUs map[string]map[string]string `yaml:GPUs` } type VolumesConfig struct { - Root string + Root string `yaml:root default:/var/lib/docker-volumes` Volumes map[string]map[string]string }","**Code Review**
+
+* The changes are minor and mostly formatting.
+* The addition of `default` tags is good for default values.
+* The new field `GPUs` is introduced without any documentation, consider adding a comment to explain its purpose.
+* The `VolumesConfig` struct has a redundant field `Root` with a default value, consider removing it.
+* The code looks clean and well-structured.","No changes were made to the code snippet, only the type and field names were updated.",Can we make this configurable?,Why are we changing the volume default?,IN,IN,IN,IN
+This set of changes is the one part of this that I'm not completely sure is valid. Can someone look over this to make sure I got the E's right?,"@@ -66,16 +66,16 @@ import java.util.Set; * the current node) may be queried. * */ -class DigraphNode implements Cloneable, Serializable { +class DigraphNode<E> implements Cloneable, Serializable { /** The data associated with this node. */ - protected Object data; + protected E data; /** * A <code>Set</code> of neighboring nodes pointed to by this * node. */ - protected Set outNodes = new HashSet(); + protected Set<DigraphNode<E>> outNodes = new HashSet<>(); /** The in-degree of the node. */ protected int inDegree = 0;","**Code Review**
+
+* The code snippet appears to be a Java implementation of a directed graph node.
+* The class `DigraphNode` has been parameterized with type `E`, which is a good practice for generic classes.
+* The type of the `data` field has been changed from `Object` to `E`, which aligns with the type parameter.
+* The type of the `outNodes` field has been changed to `Set<DigraphNode<E>>`, which is correct but may be improved by using a more specific type, such as `Set<Node<E>>`.
+* The rest of the code appears to be correct and well-structured.","**Code Review**
+
+* Type parameter E is introduced but not used in the class.
+* `data` field should be typed to E.
+* `outNodes` field should be typed to a set of DigraphNode<E>.
+* No changes were made to the class methods, suggesting the code is not fully reviewed.",Could you please fix this line as well?,"This class has a bunch of methods which return `Object`, should they return `E` instead?",IN,AS,AS,AS
+"delete the empty line ""github.com/pkg/errors"" should be grouped with other third party packages same for the rest",,"This is not a code snippet, but rather a diff of changes to a Go file. A code review for this would be:
+
+""This diff appears to be adding dependencies to the import statement. The new imports are for error handling (github.com/pkg/errors), mocking (github.com/golang/mock/gomock), and testing assertions (github.com/stretchr/testify/require). The changes look straightforward, but it would be good to verify that these dependencies are necessary and not already included elsewhere in the project.""","No changes needed, consistent import ordering.","Could you move this to the other place, to avoid duplicated imports?","please, sort imports",IN,IN,AS,IN
+remove this blank?,"@@ -15,8 +15,13 @@ package workflow import ( encoding/json + fmt net/http + ctrl sigs.k8s.io/controller-runtime + + apierrors k8s.io/apimachinery/pkg/api/errors + github.com/gin-gonic/gin github.com/chaos-mesh/chaos-mesh/api/v1alpha1","**Code Review**
+
+* The code snippet appears to be a Go module, but it's missing a `go.mod` file.
+* The import statements are not sorted alphabetically.
+* The `package` statement is not properly aligned with the rest of the code.
+* The imports are not properly formatted (e.g. `github.com/gin-gonic/gin` should be `github.com/gin-gonic/gin v1.7.2`).
+* The code does not have any documentation or comments.
+* The `+` operator is used to import multiple packages at once, which is not recommended.
+* The code does not follow standard Go coding conventions.","This code snippet appears to be the beginning of a Go file, importing various packages. However, it does not contain any cloudformation packages, nor is there any explanation of the differences between two cloudformation packages. This code snippet does not seem to be related to the question posed.",Remove empty line,We should unify the import format.,AS,IN,IN,AS
+What is the current default? Is that inconsistent across uses and that's why this is null?,"@@ -90,6 +90,12 @@ public class TableProperties { public static final String ORC_VECTORIZATION_ENABLED = read.orc.vectorization.enabled; public static final boolean ORC_VECTORIZATION_ENABLED_DEFAULT = false; + public static final String LOCALITY_ENABLED = read.locality.enabled; + public static final String LOCALITY_ENABLED_DEFAULT = null; + + public static final String LOCALITY_TASK_INITIALIZE_THREADS = read.locality.task.initialize.threads; + public static final int LOCALITY_TASK_INITIALIZE_THREADS_DEFAULT = 1; + public static final String OBJECT_STORE_ENABLED = write.object-storage.enabled; public static final boolean OBJECT_STORE_ENABLED_DEFAULT = false; ","**Code Review**
+
+The addition of new constants is clear and concise. However, some constants have default values that are not explicitly defined, which may lead to confusion. Consider defining the default values explicitly to maintain consistency throughout the code. 
+
+Example: `public static final String LOCALITY_ENABLED_DEFAULT = ""false"";`",Use class references instead of string literals for constants like `LOCALITY_ENABLED` and `LOCALITY_ENABLED_DEFAULT` to enable easy IDE lookup.,Is this default intended to be null?,can we set a default value here?,IN,IN,IN,IN
+is it necessary to order by id as a second ordering? this will take place only when several new slider items are created without reordering (position is then null). Wouldn't be better to recalculate position after creating a new item? (right now items with null in position behave differently in administration and on frontend),"@@ -78,7 +78,8 @@ class SliderController extends AdminBaseController ->from(SliderItem::class, 's') ->where('s.domainId = :selectedDomainId') ->setParameter('selectedDomainId', $this->adminDomainTabsFacade->getSelectedDomainId()) - ->orderBy('s.position'); + ->orderBy('s.position') + ->addOrderBy('s.id'); $dataSource = new QueryBuilderDataSource($queryBuilder, 's.id'); $grid = $this->gridFactory->create('sliderItemList', $dataSource);","**Code Review**
+
+* The addition of `->addOrderBy('s.id')` is likely unnecessary as it's already ordered by `s.position`. This could potentially lead to inconsistent results.
+* The use of `QueryBuilderDataSource` is a good practice, but the alias `'s.id'` is redundant. Consider using a more descriptive alias.","`The addition of's.id' to the orderBy() method is a minor change. However, it's worth noting that it may break BC if the order of items in the grid is not consistent across all domains.`",Maybe we should use `id DESC` instead of `id ASC`?,why is this change needed?,AS,IN,AS,IN
+"The use of `#should` was triggering an rspec depracation warning for me, which is why I switched this to the rspec 3 style.","@@ -1,8 +1,8 @@ shared_examples_for 'disables OpenSSH roaming' do let(:disable_ssh_roaming) { %(echo -e Host *\n UseRoaming no\n | cat - $HOME/.ssh/config > $HOME/.ssh/config.tmp && mv $HOME/.ssh/config.tmp $HOME/.ssh/config) } - let(:sexp) { sexp_find(subject, [:if, $(sw_vers -productVersion | cut -d . -f 2) -lt 12]) } + let(:sexp) { sexp_find(subject, [:if, %($(sw_vers -productVersion 2>/dev/null | cut -d . -f 2) -lt 12)]) } it 'disables OpenSSH roaming' do - sexp.should include_sexp [:cmd, disable_ssh_roaming] + expect(sexp).to include_sexp [:cmd, disable_ssh_roaming] end end","**Code Review**
+
+* Simplified `sexp_find` condition to avoid shell command output redirection issues.
+* Replaced `should` with `expect` for more modern RSpec syntax.
+* Added `2>/dev/null` to `sw_vers` command to suppress error output.",Code review: Removing the need for `sentry` in the CSP by using `2>/dev/null` to suppress output.,"I think you can get rid of the `2>/dev/null` here, since the `cut` will only return something if it's able to parse the string.",Line is too long. [101/80],AS,IN,IN,IN
+Can you throw an exception if width or height are both null,"@@ -62,6 +62,10 @@ class SimpleResizer implements ResizerInterface if ($settings['height'] == null) { $settings['height'] = (int) ($settings['width'] * $size->getHeight() / $size->getWidth()); } + + if ($settings['width'] == null) { + $settings['width'] = (int) ($settings['height'] * $size->getWidth() / $size->getHeight()); + } return $this->computeBox($media, $settings); }","**Code Review**
+
+* The new code introduces a potential bug where if `width` is null, it is set to a value that is calculated using the previously null `height`. This could lead to incorrect calculations.
+* The method does not check if `width` is set after `height` is set, potentially causing an inconsistent state.
+* Consider adding a check to ensure that either `width` or `height` is set before proceeding with the calculation.
+* The logic for calculating `width` when `height` is null seems to be incorrect and may not achieve the desired result.","No code to review, only a comment.",`$settings['width'] = (int) ($settings['height'] * $size->getWidth() / $size->getHeight());` => `$settings['width'] = (int) ($settings['height'] * $size->getWidth() / $size->getHeight());`,Can you add the brackets here too?,AS,IN,IN,IN
+parameter should be called removeFromStaticNodes,"@@ -29,9 +29,9 @@ namespace Nethermind.Cli.Modules public object[] Peers() => NodeManager.Post<object[]>(admin_peers).Result; [CliFunction(admin, addPeer)] - public string AddPeer(string enode) => NodeManager.Post<string>(admin_addPeer, enode).Result; + public string AddPeer(string enode, bool addToStaticNodes = false) => NodeManager.Post<string>(admin_addPeer, enode, addToStaticNodes).Result; [CliFunction(admin, removePeer)] - public string RemovePeer(string enode) => NodeManager.Post<string>(admin_removePeer, enode).Result; + public string RemovePeer(string enode, bool addToStaticNodes = false) => NodeManager.Post<string>(admin_removePeer, enode, addToStaticNodes).Result; } }","**Code Review**
+
+* Improved API design by adding optional parameters to `AddPeer` and `RemovePeer` methods.
+* No changes in functionality, only a minor improvement in API usability.",`AddPeer` and `RemovePeer` methods now accept an optional `addToStaticNodes` parameter. Consider capturing the set of roles that can be added or removed to static nodes in a `Set` and using `Set#contains` to simplify logic and improve readability.`,Shouldn't the parameter be named `addToStaticPeers`?,What about renaming this parameter to `addToStaticNodesList`?,IN,IN,AS,IN
+@zacharycmontoya Is there any way to distinguish a `SocketHttpHandler` from another `HttpMessageHandler` request?,"@@ -22,6 +22,10 @@ namespace Datadog.Trace.ClrProfiler.IntegrationTests [Trait(RunOnWindows, True)] public void HttpClient() { + int expectedSpanCount = EnvironmentHelper.IsCoreClr() ? 2 : 1; + const string expectedOperationName = http.request; + const string expectedServiceName = Samples.HttpMessageHandler-http-client; + int agentPort = TcpPortProvider.GetOpenPort(); int httpPort = TcpPortProvider.GetOpenPort(); ","**Code Review**
+
+* The `expectedSpanCount` variable is conditionally set based on the CLR version, but the logic is not clear. Consider adding a comment to explain the reasoning.
+* The `expectedOperationName` and `expectedServiceName` variables are defined as constants, but they are not clearly related to the test. Consider renaming them to better reflect their purpose.
+* The `agentPort` and `httpPort` variables are assigned in a single line, but it's not clear why they are assigned separately. Consider merging them into a single variable or explaining the purpose of each port.
+* The test method name `HttpClient` is not descriptive. Consider renaming it to better reflect the test's purpose.","The code snippet appears to be a test setup, but it's unclear why the original code was removed. Consider adding a comment explaining the reasoning behind the removal.",Why does the count differ?,What is the difference between 1 and 2 here?,IN,IN,IN,IN
+I'd rather just send the parameter twice than break encapsulation here. There's already precedence with webelement IDs,"@@ -1654,9 +1654,10 @@ class TargetLocator { * when the driver has changed focus to the specified window. */ window(nameOrHandle) { + let paramName = this.driver_.getExecutor().w3c ? 'handle' : 'name'; return this.driver_.schedule( new command.Command(command.Name.SWITCH_TO_WINDOW). - setParameter('name', nameOrHandle), + setParameter(paramName, nameOrHandle), 'WebDriver.switchTo().window(' + nameOrHandle + ')'); } ","**Code Review**
+
+* The code introduces a new variable `paramName` to handle the difference between W3C and non-W3C driver modes, which improves readability and maintainability.
+* The use of a ternary operator to determine the parameter name is concise and effective.
+* The command parameter is correctly set based on the driver mode.
+* The command name and execution string are correctly formatted.
+* The code follows standard JavaScript syntax and conventions.",'Nice simplification of duplicated logic with the introduction of paramName.',nit: I would probably prefer `windowW3c` and `windowLegacy` names for these.,Nit: `nameOrHandle` is more descriptive than `handle`,IN,IN,IN,IN
+You may put 'open-mmlab://res2net101_v1d_26w_4s' here. MMCV will be updated later.,"@@ -0,0 +1,5 @@ +_base_ = '../cascade_rcnn/cascade_mask_rcnn_r50_fpn_20e_coco.py' +model = dict( + pretrained= # NOQA + 'https://shanghuagao.oss-cn-beijing.aliyuncs.com/res2net/res2net101_v1b_26w_4s_mmdetv2-f0a600f9.pth', # NOQA + backbone=dict(type='Res2Net', depth=101, scale=4, base_width=26))","**Code Review**
+
+* The code is a snippet from a configuration file, likely for a deep learning model.
+* The `pretrained` parameter is assigned a URL, but the `# NOQA` comments are unnecessary and can be removed.
+* The `backbone` dictionary is assigned a type and parameters, but the `type` parameter is not validated.
+* The code assumes a specific model architecture and weights file, which may not be flexible or reusable.","This code snippet appears to be a configuration file for a model, but it's missing a crucial part of the discussion. The provided text seems to be a conversation or a discussion about adding a new shortcut to a matrix, but it's unrelated to the code snippet. 
+
+However, if I had to write a concise code review for the given code snippet, it would be:
+
+* Missing documentation for the model configuration.
+* The `pretrained` URL is hardcoded, consider using environment variables or a more robust configuration method.
+* The `backbone` configuration is incomplete, consider adding more details about the model architecture.",better to use the format in `demo_cascade_rcnn.py`,better add a license to the downloaded model?,IN,IN,IN,IN
+this conditional is useless now so it should be removed,"@@ -116,7 +116,7 @@ define(['layoutManager', 'browser', 'actionsheet', 'css!./emby-select', 'registe inputId++; } - if (!browser.firefox) { + if (browser) { this.classList.add('emby-select-withcolor'); if (layoutManager.tv) {","**Code Review**
+
+* The conditional logic has been simplified by removing the unnecessary `!` operator.
+* The addition of a class name based on the browser type is a good practice for styling.
+* The code is concise and easy to read.","```
+`wg-approvers` approval is blocking this PR. Consider moving the glob set to a separate file to allow for a more permissive OWNERS list.```",Why remove the browser check?,Why remove this check?,IN,IN,IN,IN
+I think it would make sense to fetch the cache values after deleting the listens and making sure they are what we expect.,"@@ -426,8 +426,11 @@ class TestTimescaleListenStore(DatabaseTestCase): self.assertEqual(count + 1, int(cache.get(user_key, decode=False) or 0)) def test_delete_listens(self): - self._create_test_data(self.testuser_name) - listens, min_ts, max_ts = self.logstore.fetch_listens(user_name=self.testuser_name, to_ts=1400000300) + uid = random.randint(2000, 1 << 31) + testuser = db_user.get_or_create(uid, user_%d % uid) + testuser_name = testuser['musicbrainz_id'] + self._create_test_data(testuser_name) + listens, min_ts, max_ts = self.logstore.fetch_listens(user_name=testuser_name, to_ts=1400000300) self.assertEqual(len(listens), 5) self.assertEqual(listens[0].ts_since_epoch, 1400000200) self.assertEqual(listens[1].ts_since_epoch, 1400000150)","**Code Review**
+
+* The new test data creation is not properly wrapped in a test-only context, potentially affecting other tests.
+* The `testuser_name` variable is not validated for uniqueness.
+* The test is not explicitly checking for any edge cases or failures.
+* The `fetch_listens` method is not verified to be working correctly with the new test data.
+* The test is not using a more robust way to generate test data (e.g., using a test factory).","Here is a concise code review:
+
+`@weizhouapache`: could this cause regression if it always removes keys? See old commits d62d5c6cd23daeb922e5c6f64399cc30596c15a3, 8fb388e9312b917a8f36c7d7e3f45985a95ce773, c9ce3e2344ab863dae09e63bf783331097a660cb. Does it break for:
+- stop and destroy a VM
+- add/remove a new nic to VM (multi-homed vms in VPC)
+- update/replace new IPs to VM
+- change in nic/ip order?",you should use `uuid.uuid4()` instead of `random.randint`,You can use `user_data` fixture here.,IN,AS,AS,IN
+Should the API have a dependency on the SDK?,"@@ -23,6 +23,7 @@ import ( go.opentelemetry.io/otel/api/kv go.opentelemetry.io/otel/api/metric go.opentelemetry.io/otel/api/metric/registry + go.opentelemetry.io/otel/sdk/instrumentation ) // This file contains the forwarding implementation of metric.Provider","**Code Review**
+
+* The addition of a new import statement suggests a new feature or functionality has been added, but the commit message does not reflect this change.
+* The code does not appear to have any syntax errors or formatting issues.
+* The commit message is concise but does not provide enough context for the changes made.
+* Consider adding a more descriptive commit message to reflect the changes made.","""This import path is subject to change by the `go-systemd` package, which may cause issues.""",This is not used,It should be `go.opentelemetry.io/otel/sdk/instrumentation/library`,AS,IN,IN,AS
+Can this also include a quick test for transpiling by name?,"@@ -47,12 +47,18 @@ describe transpiling YAML plans do } PLAN - it 'transpiles a yaml plan' do + it 'transpiles a YAML plan from a path' do expect { run_cli(%W[plan convert #{plan_path}]) }.to output(output_plan).to_stdout end + it 'transpiles a YAML plan from a plan name' do + expect { + run_cli(%W[plan convert yaml::conversion -m #{modulepath}]) + }.to output(output_plan).to_stdout + end + it 'plan show output is the same for the original plan and converted plan', ssh: true do Dir.mktmpdir do |tmpdir| FileUtils.mkdir_p(File.join(tmpdir, 'plans'))","Here is a concise code review:
+
+**Code Review**
+
+* Additional test cases for transpiling YAML plans are added, which is good for ensuring the functionality is working correctly.
+* However, the new test cases are similar to the existing ones and could be extracted into a separate method to avoid code duplication.
+* The `ssh: true` in the last test case is not explained and could be clarified.","```markdown
+**Code Review**
+
+The addition of new test cases for transpiling YAML plans from a path and plan name is a good step. However, the last test case seems out of place as it checks the `plan show` output for the original and converted plan, which doesn't seem directly related to the new functionality. Consider moving or rephrasing this test case to better fit the context. 
+
+```","You could use `plan_path` here, too.",This is the test for the change,AS,IN,AS,IN
+Are these imports needed?,"@@ -14,7 +14,9 @@ import abc import logging +import datetime import parameter +import target import warnings import traceback import pyparsing as pp","**Code Review**
+
+* Unnecessary blank line after import statements.
+* Unused import `warnings` and `traceback`.
+* No docstrings or comments to explain the purpose of the code.
+* No type hints or docstrings for imported functions.","""Consider switching to absolute imports to avoid potential issues.""",Nit: Unnecessary empty line,This line can be removed.,IN,IN,IN,IN
+I believe you're missing the comparison after 'be',"@@ -1019,4 +1019,18 @@ describe Mongoid::Relations::Embedded::One do end end end + + context when parent validation of child is set to false do + + let(:building) do + building = Building.create + building.building_address = BuildingAddress.new + building.save + building.reload + end + + it parent successfully embeds an invalid child do + expect(building.building_address).to be_a(BuildingAddress) + end + end end","This code review is brief and to the point:
+
+**Code Review**
+
+* The additional test context is clear and concise.
+* The `let` block is well-structured and easy to follow.
+* The `it` block is straightforward and tests the expected behavior.
+* However, the test only checks if the embedded child is not nil, which may not be sufficient to ensure the child is valid. Consider adding additional assertions to verify the child's validity.","The code appears well-structured, but could benefit from adding a case for `sig {params.void}` as per the reviewer's suggestion.",You don't need to assign to a variable here.,Layout/TrailingWhitespace: Trailing whitespace detected.,IN,AS,IN,IN
+"Rails will autorequire `acts_as_editable` once it encounters the constant `ActsAsEditable`. Thus if we move `ActiveRecord::Base.send :include, ActsAsEditable` from _acts_as_editable.rb_ to this file, the require line will not be needed anymore. Instead of requiring the file ourselves, we will let Rails do it for us. This fix will also remove the need to explicitly require `acts_as_editable` in _mock_active_record_base.rb_.","@@ -0,0 +1 @@ +require #{Rails.root}/app/models/acts_as_editable/acts_as_editable.rb","This line of code appears to be a single line of a Git diff output, specifically an addition of a `require` statement in a Rails application. The code is straightforward and serves its purpose, but it would be more idiomatic in Rails to use the `require` method in a `config.autoload_paths` block instead of requiring it directly in a file.","""Unclear intent. Instead of requiring a file, consider including the ActsAsEditable module directly in the model.""",Use 2 (not 3) spaces for indentation.,Do not use the `#` to access the Rails root directory. Use `Rails.application.root` instead.,IN,IN,IN,IN
+either SUPPORTED_TYPECLASS or supported_typeclass. Camelcase only for class names.,"@@ -55,6 +55,7 @@ class InventoryTypeClass(object): RESOURCE = 'resource' IAM_POLICY = 'iam_policy' GCS_POLICY = 'gcs_policy' + Supported_TypeClass = [RESOURCE, IAM_POLICY, GCS_POLICY] class InventoryIndex(BASE):","**Code Review**
+
+* The new constant `Supported_TypeClass` is defined but not used. Consider removing it.
+* The class `InventoryIndex` is not defined in this snippet, so it's unclear what it's supposed to do.
+* The code uses a mix of uppercase and lowercase variable names, which can make it harder to read. Consider sticking to a consistent naming convention.","Here is a concise code review:
+
+* Inconsistent naming convention: ""is"" is used in one instance but not others.
+* `_attribute_map` is unclear: its purpose and relation to `isHidden` and `retrievable` is not evident.",Should this be `SupportedTypes`?,Supported_TypeClass -> SUPPORTED_TYPE_CLASS,IN,IN,AS,IN
+Please dont change this.,,"This is not a code snippet, it appears to be a diff of a copyright header. However, I can still provide a concise code review:
+
+**Code Review:**
+* Updated copyright year to 2018.","`Updated copyright year to 2018, minor formatting change.`",Please don't change the copyright year,"this is a new copyright year, but I don't think this is a full re-write of this file.",IN,IN,SE,IN
+"It is `$JAVA_HOME/bin`, not `$JAVA_HOME`, which should be added.","@@ -18,6 +18,7 @@ module Travis CLEANUPS.each do |find_arg| sh.raw find #{find_arg[:directory]} -name #{find_arg[:glob]} -delete 2>/dev/null end + sh.export 'PATH', '$JAVA_HOME:$PATH' end def install","**Code Review**
+
+* The new line `sh.export 'PATH', '$JAVA_HOME:$PATH'` appears to be an unrelated change to the existing `install` method. It would be better to add a comment explaining the purpose of this change.
+* The rest of the code looks clean and concise.",Favor modifier if usage when having a single-line body. Another good alternative is the usage of control flow &&/||.,This line is not needed anymore.,"You can do `sh.export 'PATH', value: $JAVA_HOME + $PATH`",IN,IN,IN,IN
+"I think the functional test should not change here, this is probably a test in itself :)","@@ -20,7 +20,7 @@ def function(): #todo: no space after hash # +1: [fixme] - # FIXME: this is broken + # FIXME: this is broken # +1: [fixme] # ./TODO: find with notes # +1: [fixme]","**Code Review**
+
+* Removed unnecessary comments, which were repeated and not descriptive.
+* Removed unnecessary `# +1: [fixme]` comments, which are not descriptive.
+* Removed `../TODO: find with notes`, which is not a valid comment.
+* Code is concise and easy to read.","`Code organization could be improved by prioritizing key information: (1) removal version, (2) replacement, and (3) additional resources.`","@havocp I'm going to fix this, but I'm going to change the `# +1: [fixme]` to `# FIXME: this is broken` so that they're all the same.",this looks weird. I guess it's not part of your PR,IN,AS,IN,IN
+Shouldn't we throw an exception if the context is null instead?,,"**Code Review**
+
+* The addition of `$mediaContext` is unnecessary as it's equivalent to `$media->getContext()`. Consider removing it for simplicity.
+* The null check for `$mediaContext` is redundant since it's already guaranteed to be set by the previous line.
+* Consider using early returns or method extraction to improve code readability and reduce nesting.","Removed unused code snippet, refactored to handle null context.",I would add the null check before calling `getContext` as well,this function was removed in #932 from media object,IN,IN,IN,IN
+This file shouldn't be in this PR,"@@ -1,6 +1,6 @@ // DO NOT EDIT: This file is autogenerated via the builtin command. -package v1_test +package v1 import ( ast github.com/influxdata/flux/ast","**Code Review**
+
+* The comment at the top suggests this file is auto-generated, but the code appears to be manually edited (e.g. package name change).
+* The import statement for `ast` is unnecessary since it's already imported from the parent package.
+* The package name change from `v1_test` to `v1` is inconsistent with the comment suggesting this file is auto-generated.",nit: inconsistent package import ordering.,What happened here? Why did this get changed?,Shouldn't this be `v1/test`?,AS,IN,IN,AS
+"How is this message used? Can we remove the ""crashed executor/container"" part which is an implementation detail?",,"**Code Review**
+
+The added `EXECUTION_STOPPED` case and its corresponding return value are well-structured and clear in intent. However, the variable `Killing` is not defined anywhere in the function. It should be replaced with a more descriptive variable name. The function could also benefit from a comment explaining the purpose of the `EXECUTION_STOPPED` case.","Needs to add missing cases for `EXECUTION_STOPPED` to `BUNDLE_SPECIFIC_HEADERS` and `options` in `WebUtils` class, and also to `Syntax` class.",What's the difference between this and `KILLED`?,Should we log the exception too?,AS,IN,IN,AS
+This object should be in `lib/music/show.rb` and you should also wrap this object in the `Faker::Music::Show`.,"@@ -0,0 +1,19 @@ +# frozen_string_literal: true + +module Faker + class Show < Base + class << self + def adult_musical + fetch('show.adult_musical') + end + + def kids_musical + fetch('show.kids_musical') + end + + def play + fetch('show.play') + end + end + end +end","**Code Review**
+
+* The code is well-structured and follows the Faker gem's naming conventions.
+* The use of `fetch` method is concise and readable.
+* However, the `adult_musical`, `kids_musical`, and `play` methods are identical and could be extracted into a separate method or even a single method with a parameter to make the code more DRY (Don't Repeat Yourself).
+* The `Base` class is not shown in this snippet, but it's assumed to be a part of the Faker gem's architecture.","**nitpick (non-blocking):** The order of methods `adult_musical`, `kids_musical`, and `play` could be alphabetical to match the naming convention.",I would add `private :new`,I think you forgot to add these files to the commit,AS,AS,IN,IN
+Also update line 2205 below,"@@ -2186,7 +2186,7 @@ class WebElement { if (!this.driver_.fileDetector_) { return this.schedule_( new command.Command(command.Name.SEND_KEYS_TO_ELEMENT). - setParameter('text', keys). + setParameter('text', keys.then(keys => keys.join(''))). setParameter('value', keys), 'WebElement.sendKeys()'); }","**Code Review**
+
+* The change is minor and appears to be a bug fix.
+* The addition of `.then(keys => keys.join(''))` suggests a potential issue with asynchronous code, but it's likely a necessary fix given the `keys` variable is a promise.
+* The code is concise and easy to understand.","**Code Review**
+
+Refactored test to not modify `Object.prototype` to prevent Chrome-specific failure.",Is this guaranteed to resolve? I'm wondering if this could lead to a `Promise` being passed to `setParameter`.,"is this a race condition? if we call then() before the promise is resolved, it will return a promise instead of a string.",AS,IN,AS,IN
+"Same as before, the properties already exists in parent","@@ -8,16 +8,6 @@ class TTemplateParamClass extends TClassString */ public $param_name; - /** - * @var string - */ - public $as; - - /** - * @var ?TNamedObject - */ - public $as_type; - /** * @var string */","Removed 10 lines of commented out code, simplifying the class definition.","`This method could be optimized by checking for the existence of'schema' in the data array before calling $this->jsonSchemaTypeFactory->getType. Also, consider verifying the schema's compatibility with Swagger v2.`",shouldn't these be removed too?,Can you rename this to `name`?,IN,AS,AS,IN
+The rule renderer isn't meant to be stateful so probably best to move this out of here,"@@ -24,6 +24,10 @@ import ( github.com/projectcalico/felix/stringutils ) +func (r *DefaultRuleRenderer) CleanupEndPoint(ifaceName string) { + r.epmm.RemoveEndPointMark(ifaceName) +} + func (r *DefaultRuleRenderer) WorkloadDispatchChains( endpoints map[proto.WorkloadEndpointID]*proto.WorkloadEndpoint, ) []*Chain {","**Code Review**
+
+* The `CleanupEndPoint` method is added to the `DefaultRuleRenderer` struct, which is a good practice for encapsulating related functionality.
+* The method correctly removes an endpoint mark from the `epmm` instance.
+* The `WorkloadDispatchChains` method is unchanged, but its purpose and implementation should be reviewed for completeness and correctness.
+* The `endpoints` map parameter is not checked for nil before use, which could lead to a panic. Consider adding a nil check.
+* The return type `*[]*Chain` is unusual and may indicate a design issue. Consider using a more conventional return type.","""Consider removing the `CleanupEndPoint` method as it doesn't seem to be used.""","Nit: RemoveEndPointMark is a verb and implies some action is taken. What do you think of ""ClearEndPointMark""?",I think we should be able to remove the need for this if we make a change to the `RemoveEndPointMark` to check the `endpoints` list to see if we should remove the mark or not.,AS,IN,IN,AS
+Remove unused import,"@@ -76,9 +76,11 @@ import org.springframework.security.oauth2.client.userinfo.ReactiveOAuth2UserSer import org.springframework.security.oauth2.client.web.server.AuthenticatedPrincipalServerOAuth2AuthorizedClientRepository; import org.springframework.security.oauth2.client.web.server.OAuth2AuthorizationCodeGrantWebFilter; import org.springframework.security.oauth2.client.web.server.OAuth2AuthorizationRequestRedirectWebFilter; +import org.springframework.security.oauth2.client.web.server.ServerAuthorizationRequestRepository; import org.springframework.security.oauth2.client.web.server.ServerOAuth2AuthorizationCodeAuthenticationTokenConverter; import org.springframework.security.oauth2.client.web.server.ServerOAuth2AuthorizationRequestResolver; import org.springframework.security.oauth2.client.web.server.ServerOAuth2AuthorizedClientRepository; +import org.springframework.security.oauth2.client.web.server.WebSessionOAuth2ServerAuthorizationRequestRepository; import org.springframework.security.oauth2.client.web.server.authentication.OAuth2LoginAuthenticationWebFilter; import org.springframework.security.oauth2.core.endpoint.OAuth2AuthorizationRequest; import org.springframework.security.oauth2.core.oidc.user.OidcUser;","**Code Review**
+
+* The code snippet appears to be a Java configuration for OAuth2 authentication using Spring Security.
+* The addition of new imports suggests changes to the configuration, potentially adding support for server-side OAuth2 authorization.
+* The changes are minor and do not introduce any obvious security vulnerabilities.
+* The code is generally well-organized, but the use of multiple imports for the same classes (e.g. `ServerOAuth2AuthorizedClientRepository`) could be simplified.
+* A brief explanation of the changes would be beneficial for future maintainers.",`ACL.impersonate` seems unlikely to be a warning. The author thought this was a justification rather than a value.,Is this needed?,This is the main change. We now use the `WebSession` to store the authorization request.,AS,IN,IN,IN
+This should be done by code-gen change happening in the hydra repo. I am tweaking it just to get CI into a 'passing' state,"@@ -36,8 +36,11 @@ var SwaggerPetstore = ( /** @lends SwaggerPetstore */ function() { * {@link https://github.com/request/request#requestoptions-callback Options doc} */ function SwaggerPetstore(baseUri, options) { - SwaggerPetstore['super_'].call(this, options); - + if (!options) { + options = {}; + } + SwaggerPetstore['super_'].call(this, options.credentials, options); + this.baseUri = baseUri; if (this.baseUri === null || this.baseUri === undefined) { this.baseUri = 'http://localhost:12510/api';","**Code Review**
+
+* Introduced a potential bug by allowing `options` to be null or undefined. It should be validated to ensure it's an object.
+* Unnecessary check for `baseUri` being null or undefined, as it's already validated by the `if` statement.
+* Variable naming could be improved for better readability (e.g., `baseUri` instead of `baseUri`).
+* Consider adding a doc comment to explain the purpose of the `options` parameter.
+* The `super_` call is not typical JavaScript style; consider using `super()` instead.",`additionalArguments` is an array and wasn't being inherited properly. This was a bug relevant to the change.,should this be `options = options || {}`?,this line should not be necessary,AS,IN,AS,AS
+Is it safe to assume that these two keys are always present? `this[string]` will throw a `KeyNotFoundException` if they are not.,"@@ -45,11 +45,11 @@ namespace Datadog.Trace.ClrProfiler.AutoInstrumentation.Log4Net loggingEvent.Properties[CorrelationIdentifier.VersionKey] = tracer.Settings.ServiceVersion ?? string.Empty; loggingEvent.Properties[CorrelationIdentifier.EnvKey] = tracer.Settings.Environment ?? string.Empty; - var span = tracer.ActiveScope?.Span; - if (span is not null) + var spanContext = tracer.DistributedSpanContext; + if (spanContext is not null) { - loggingEvent.Properties[CorrelationIdentifier.TraceIdKey] = span.TraceId; - loggingEvent.Properties[CorrelationIdentifier.SpanIdKey] = span.SpanId; + loggingEvent.Properties[CorrelationIdentifier.TraceIdKey] = spanContext[HttpHeaderNames.TraceId]; + loggingEvent.Properties[CorrelationIdentifier.SpanIdKey] = spanContext[HttpHeaderNames.ParentId]; } } ","**Code Review**
+
+* Removed unnecessary null checks for `span` and replaced with a more idiomatic check for `spanContext`.
+* Simplified the code by removing redundant null checks and using early returns.
+* Renamed `span` to `spanContext` to reflect its new type and purpose.
+* Used dictionary indexing to access `spanContext` values, improving readability.",The `JaxRsAnnotationsTracer.startScope()` call is not used in the code snippet and can be safely deleted.,"I think we want to use the `TraceParent` header here, not the `ParentId` header.",We should add a TODO here to update this when we have the `Tracer.SpanContext` API,IN,IN,IN,AS
+No need for this to be `W3C_` since there is no JWP equivalent,"@@ -101,6 +101,7 @@ class Command(object): EXECUTE_ASYNC_SCRIPT = executeAsyncScript SET_SCRIPT_TIMEOUT = setScriptTimeout SET_TIMEOUTS = setTimeouts + W3C_MINIMIZE_WINDOW = w3cMinimizeWindow MAXIMIZE_WINDOW = windowMaximize W3C_MAXIMIZE_WINDOW = w3cMaximizeWindow GET_LOG = getLog","**Code Review**
+
+The code snippet appears to be a class definition for a `Command` object, where several constants are defined as class attributes. The addition of a new constant `W3C_MINIMIZE_WINDOW` suggests that the code is being modified to support a new feature. However, the change is minor and does not introduce any obvious bugs or complexity. The code is straightforward and easy to understand. 
+
+**Recommendation**: None.",This code snippet appears to be a part of a class definition and does not contain the code being reviewed. Please provide the actual code snippet you would like me to review.,I think this is a typo,This needs to be `w3cMinimizeWindow`,AS,IN,IN,IN
+Does it send requests with urlencoded bodies anywhere? I thought it sends only json. Maybe content-type should be `application/json` by default?,"@@ -22,7 +22,7 @@ module Selenium class Common MAX_REDIRECTS = 20 # same as chromium/gecko CONTENT_TYPE = 'application/json'.freeze - DEFAULT_HEADERS = {'Accept' => CONTENT_TYPE}.freeze + DEFAULT_HEADERS = {'Accept' => CONTENT_TYPE, 'Content-Type' => 'application/x-www-form-urlencoded'}.freeze attr_accessor :timeout attr_writer :server_url","**Code Review**
+
+* Added new key-value pair to `DEFAULT_HEADERS` hash without updating the frozen state, which may cause issues. Consider using a separate hash or re-freezing the updated hash.
+* No other issues found.",The addition of 'Content-Type' => 'application/x-www-form-urlencoded' in DEFAULT_HEADERS may introduce development-specific allowances that could lead to false positives in testing. Consider making this route-specific.,can we make this a constant so that we can refer to it in the code?,Is this used?,IN,AS,IN,IN
+"What if `node.jsonRpcConfiguration().getAuthenticationPublicKeyFile()` is empty string, would that cause a problem here?","@@ -125,6 +125,10 @@ public class ProcessBesuNodeRunner implements BesuNodeRunner { params.add(--rpc-http-authentication-credentials-file); params.add(node.jsonRpcConfiguration().getAuthenticationCredentialsFile()); } + if (node.jsonRpcConfiguration().getAuthenticationPublicKeyFile() != null) { + params.add(--rpc-http-authentication-public-key-file); + params.add(node.jsonRpcConfiguration().getAuthenticationPublicKeyFile().getAbsolutePath()); + } } if (node.wsRpcEnabled()) {","**Code Review**
+
+* The addition of new functionality is well-structured and easy to follow.
+* The code is concise and directly addresses the new requirement.
+* Consider adding a comment to explain the purpose of the new code block for better readability.
+* The use of `getAbsolutePath()` method is unnecessary as `add()` method in `params` already handles file paths correctly.",Declaring the System property name as a static variable could improve code readability and maintainability.,We can use `Paths.get()` here.,Why absolute path?,IN,AS,IN,IN
+"Shouldn't this be `i * Interval`? You're multiplying nanos with a Duration, I'm not sure what's the result :)","@@ -161,16 +161,13 @@ func (p *Pinger) PingProvider(ip string, localPorts, remotePorts []int, proxyPor return localPort, remotePort, err } -func (p *Pinger) ping(conn *net.UDPConn, ttl int, stop <-chan struct{}) error { - // Windows detects that 1 TTL is too low and throws an exception during send - i := 0 - +func (p *Pinger) ping(conn *net.UDPConn, remoteAddr *net.UDPAddr, ttl int, stop <-chan struct{}) error { err := ipv4.NewConn(conn).SetTTL(ttl) if err != nil { return errors.Wrap(err, pinger setting ttl failed) } - for { + for i := 1; time.Duration(i)*p.pingConfig.Interval < p.pingConfig.Timeout; i++ { select { case <-stop: return nil","**Code Review**
+
+* Removed unused `localPorts` and `remotePorts` parameters from `PingProvider` function.
+* Removed unused `proxyPort` parameter from `PingProvider` function.
+* Simplified and corrected `ping` function to use `remoteAddr` instead of `ip` and added a loop counter `i` to iterate until the timeout is reached.
+* Removed unnecessary comment about Windows exception.
+* Improved error handling in `ping` function.","```markdown
+- Redundant variable `i` introduced for no reason.
+- `ping` function now takes `remoteAddr` instead of `ip`, consider validating the config.
+```",why change the logic?,Should we make the pingConfig.Timeout a public member so that we can control the max ping count?,IN,IN,IN,AS
+"In this and the one below, should we assert `self!= NULL` first?",,"**Code Review**
+
+* Added additional checks for `self` and `self->loadstate` to ensure the function is only called when the sysroot is loaded.
+* Removed the `g_return_val_if_fail` macro, which is not necessary in this case, and replaced it with `g_assert` for better error handling.","""This change adds a `g_assert` to ensure the sysroot is loaded before returning the booted deployment, improving error handling and making the function more robust.""",I think it's ok to make this a `g_return_val_if_fail` as well. The only place we call this function is in ostree_sysroot_get_deployment() which does the same checks.,Is this a new assertion?,IN,IN,IN,IN
+This switch statement can be removed. Just return q.items[act.Nonce]!= nil,,"**Code Review**
+
+* The `ConvertFromTransferPb` and `ConvertFromVotePb` methods are not used and can be removed.
+* The `ConvertFromActionPb` method is used instead, but its name suggests it's the correct method to use.
+* The variable `tsf` and `vote` are not used after their initial assignment.
+* The `nonce` variable is assigned a new value in each case, but it's not clear why it's being reassigned.","The naming convention for `Bytes` could be improved. Considering the built-in module `bytes` is for byte slices, it might be more clear to rename it to `pubKey`.",This is fine. But why not just pass in the interface type?,should we change the name of the function to ConvertFromActionPb?,AS,AS,IN,AS
+"Maybe just `env_prefix`, I don't think this is referring to the WQ manager.","@@ -52,7 +52,7 @@ static struct internal_amazon_batch_amazon_ids{ char* aws_secret_access_key; char* aws_region; char* aws_email; - char* master_env_prefix; + char* manager_env_prefix; }initialized_data; static unsigned int gen_guid(){","**Code Review**
+
+* The variable name `initialized_data` is not descriptive. Consider renaming it to `amazon_batch_config`.
+* The addition of `manager_env_prefix` instead of `master_env_prefix` seems to be a deliberate change, but the reason for the change is not clear. Consider adding a comment to explain the change.
+* The `gen_guid` function is not related to the changes made in this commit. Consider moving it to a separate commit or removing it from this review.",`Please provide the code snippet to review.`,Why was this changed?,This variable was changed from master to manager because it is used to get the manager's access key and secret.,IN,IN,IN,IN
+"I love seeing diffs like this one, adding a `String` message to an otherwise cryptic `assert`! It makes me realize you must have had a hellacious debugging session!","@@ -404,7 +404,7 @@ final class ReaderPool implements Closeable { private boolean noDups() { Set<String> seen = new HashSet<>(); for(SegmentCommitInfo info : readerMap.keySet()) { - assert !seen.contains(info.info.name); + assert !seen.contains(info.info.name) : seen twice:  + info.info.name ; seen.add(info.info.name); } return true;","**Code Review**
+
+* The `noDups` method is now correctly checking for duplicate SegmentCommitInfo names, and providing a clear error message if a duplicate is found.
+* The addition of the `seen twice:  + info.info.name` message provides valuable context for debugging.
+* The method still returns `true` even if a duplicate is found, which may not be the intended behavior. Consider throwing an exception or returning a specific error value instead.","""Extract a helper method to reduce duplication of `MetaClient` and `table` logic.""",Is this a case where we want to log the value of `info.info.name`?,I think this assert should also check for duplicate values within the same segment,IN,IN,IN,AS
+this is spelled wrong and also not used so remove it,"@@ -29,6 +29,13 @@ from PyRegion import PyRegion from nupic.algorithms.cla_classifier_factory import CLAClassifierFactory +class _NumCatgoriesNotSpecified(Exception): + pass + + +class _UnknownOutput(Exception): + pass + class CLAClassifierRegion(PyRegion): ","**Code Review**
+
+* New exceptions `_NumCatgoriesNotSpecified` and `_UnknownOutput` are introduced but not used anywhere in the code. Consider removing or utilizing them.
+* The new exceptions are defined below the `CLAClassifierRegion` class, which may make it harder to understand the context of these exceptions. Consider moving them above the class definition.","**Code Review**
+
+The code appears to be a simple Python class definition for a CLAClassifierRegion. The addition of two new exception classes (_NumCatgoriesNotSpecified and _UnknownOutput) is a good practice for error handling. However, the comment at the top is unprofessional and unnecessary.",I don't see these used?,This is not used.,IN,IN,IN,IN
+We can re-use the config in our tests.,"@@ -21,4 +21,8 @@ RSpec.configure do |config| Capybara.default_host = http://localhost:3000 OmniAuth.config.test_mode = true + + config.before(:suite) do + Role.ensure_system_roles_exist + end end","**Code Review**
+
+* Added new configuration block for RSpec, which is a good practice.
+* Introduced a new dependency `Role` without explanation, consider adding a comment or documentation.
+* `ensure_system_roles_exist` method is not defined in the provided snippet, ensure it exists and is properly implemented.
+* Configuration block is well-structured and easy to read.","`Added a new config block to ensure system roles exist before the suite runs, but the original comment is still present, suggesting potential unintended consequences. Consider removing or updating the comment to reflect the change.`","this is just so that we always have those 2 roles, even when we run tests in parallel",This is just to ensure that the system roles exist before the tests run.,IN,AS,IN,IN
+We don't need this for the PInvoke?,"@@ -57,13 +57,13 @@ PDEBUG_SYSTEM_OBJECTS g_ExtSystem; // Queries for all debugger interfaces. #ifndef FEATURE_PAL -extern C HRESULT +HRESULT ExtQuery(PDEBUG_CLIENT client) { HRESULT Status; g_ExtClient = client; #else -extern C HRESULT +HRESULT ExtQuery(ILLDBServices* services) { // Initialize the PAL and extension suppport in one place and only once.","**Code Review**
+
+* The `#ifndef FEATURE_PAL` directive suggests that the code is conditionally compiled based on a feature flag. However, it's unclear what this flag represents and why it's necessary.
+* The function signature `HRESULT ExtQuery(PDEBUG_CLIENT client)` is changed to `HRESULT ExtQuery(ILLDBServices* services)` without any explanation or documentation.
+* The code assumes that `g_ExtClient` and `g_ExtSystem` are global variables, which may lead to tight coupling and make the code harder to test.
+* The comment ""Initialize the PAL and extension suppport in one place and only once"" is unclear and may not accurately reflect the code's functionality.","**Code Review**
+
+The `ExtQuery` function is now correctly declared with a return type of `HRESULT`. However, the function signature change may cause issues if the function is being called from C code, which is currently declared as `extern ""C""`.",Is this still needed?,Should this be `ExtQueryForPAL` now?,AS,IN,IN,AS
+"weird naming: `is` but `fields` (plural or singular?). If the method checks if the fragment has an invalid value, then ""hasInvalidValue"" or ""containsInvalidValue"" is fine no?",,"Code Review:
+* The `containsInvalidValue()` method has been replaced with `isFieldsInvalid()` in two places, improving consistency.
+* The `viewPager.setCurrentItem(2, true);` calls are now correctly indented.
+* The code structure is clear and concise.",The removal of `clearInputImage` without explanation or usage context is unclear and potentially problematic. Consider adding a comment or revising the logic to ensure its intended purpose is maintained.,fragmento -> fragment,typo in fragmento,IN,IN,IN,IN
+Is this case purely hypothetical or did it solve an issue that occurred in your testing? I'm trying to understand this change a little better,"@@ -37,9 +37,16 @@ namespace Datadog.Trace.ClrProfiler.Managed.Loader } var path = Path.Combine(ManagedProfilerDirectory, ${assemblyName}.dll); + if (File.Exists(path)) { - StartupLogger.Debug(Loading {0}, path); + if (args.Name.StartsWith(Datadog.Trace, Version=) && args.Name != AssemblyName) + { + StartupLogger.Debug(Trying to load {0} which does not match the expected version ({1}), args.Name, AssemblyName); + return null; + } + + StartupLogger.Debug(Resolving {0}, loading {1}, args.Name, path); return Assembly.LoadFrom(path); } ","**Code Review**
+
+* Added unnecessary whitespace between `if` statement and its block.
+* Removed debug logging message that was previously present.
+* Added new debug logging messages with inconsistent formatting.
+* Added a new condition to check the assembly name, but it's not clear why this is necessary.
+* The `return null` statement is not properly formatted.
+* The method name `StartupLogger.Debug` is not clear; consider using a more descriptive name.","- Unnecessary logging: the debug log for loading the assembly is removed, but a new debug log is added for a different scenario.",I would make this check more strict by adding `Version` and `Culture` to the check.,Could we make this a bit more robust and check for other potential names?,IN,IN,IN,AS
+"Not sure if it's an issue, but this is a breaking change in a public API. Maybe we should add as an overload without optional parameter instead and delegate the existing call to this one?","@@ -15,8 +15,9 @@ namespace Datadog.Trace.Configuration /// <paramref name=data/>. /// </summary> /// <param name=data>A string containing key-value pairs which are comma-separated, and for which the key and value are colon-separated.</param> + /// <param name=allowOptionalMappings>Determines whether to create dictionary entries when the input has no value mapping</param> /// <returns><see cref=IDictionary{TKey, TValue}/> of key value pairs.</returns> - public static IDictionary<string, string> ParseCustomKeyValues(string data) + public static IDictionary<string, string> ParseCustomKeyValues(string data, bool allowOptionalMappings = false) { var dictionary = new ConcurrentDictionary<string, string>(); ","**Code Review**
+
+* Added a new optional parameter `allowOptionalMappings` with a default value of `false`, which improves flexibility and allows for more use cases.
+* The rest of the method remains unchanged, which is a good sign that the existing logic is sound.
+* Consider adding XML comments for the new parameter to provide more context for users.","The review suggests annotating `TOptions` as `[DAM(Properties)]` to suppress warnings, but questions its effectiveness due to potential issues with derived types and trim-safety.",This is an API break. Can we make this change with a new method and deprecate the old one?,"I think we should be able to remove the `allowOptionalMappings` param, since we're only using it to return a default empty dictionary.",IN,AS,IN,AS
+Why was this `Task.Yield` removed? It was added in purpose.,"@@ -31,7 +31,6 @@ namespace MvvmCross.ViewModels { try { - await Task.Yield(); await task; } catch(Exception e)","**Code Review**
+
+* Removed unnecessary `await Task.Yield()` call, which doesn't achieve anything in this context.
+* Removed `try`/`catch` block, which is not necessary as `await` already handles exceptions.
+* Consider adding a comment to explain the purpose of this code.","""This annotation could have far-reaching implications for related APIs.""",Any reason to remove this?,"I'm not sure this is correct - if the `TaskCompletionSource` is already completed, this will just hang.",IN,AS,IN,IN
+Is this limitation necessary?,"@@ -25,7 +25,10 @@ def single_gpu_test(model, with torch.no_grad(): result = model(return_loss=False, rescale=True, **data) + batch_size = len(result) if show or out_dir: + assert batch_size == 1, 'show or out during test only support ' \ + 'batch size of 1' img_tensor = data['img'][0] img_metas = data['img_metas'][0].data[0] imgs = tensor2imgs(img_tensor, **img_metas[0]['img_norm_cfg'])","**Code Review**
+
+The code snippet appears to be a part of a single GPU test function. It's concise and readable. However, the variable `batch_size` is only used once and could be removed. The `assert` statement is also only used when `show` or `out_dir` is True, so it could be moved inside a conditional block for better clarity. 
+
+```python
+if show or out_dir:
+    assert batch_size == 1,'show or out during test only support'\
+                           'batch size of 1'
+```",`caffe_mode` can be set to True by default as it's only set to False once in the exconv layer.,can we add the same assertion in `single_gpu_test`?,"I think it is better to use `isinstance(result, torch.Tensor)` instead of `len(result) == 1`?",AS,IN,IN,IN
+"I recommend using StringSliceVarP to resolve the label flag, like `-l key1=value1,key2=value2`. What do you think?","@@ -114,6 +114,9 @@ func addJoinOtherFlags(cmd *cobra.Command, joinOptions *types.JoinOptions) { cmd.Flags().StringVar(&joinOptions.TarballPath, types.TarballPath, joinOptions.TarballPath, Use this key to set the temp directory path for KubeEdge tarball, if not exist, download it) + + cmd.Flags().StringVarP(&joinOptions.Labels, types.Labels, l, joinOptions.Labels, + `use this key to set the customized labels for node. you can input customized labels like {key1:value1, key2:value2}`) } // newJoinOptions returns a struct ready for being used for creating cmd join flags.","**Code Review**
+
+The added code is well-formatted and clear. However, the `StringVarP` function is used instead of `StringVar` for the `Labels` flag, which might be a mistake as it doesn't follow the typical Cobra flag naming convention. Consider using `StringVar` for consistency.","The addition of a new flag for customized labels is clear and well-documented. However, the flag name and usage description could be improved for better readability and user experience. The usage description for the label flag is quite long and contains code snippets, which may be overwhelming for users. Consider simplifying the description and providing examples separately.",I think we need to make sure the format is right.,"how about ""labels"" and ""label""?",IN,AS,IN,IN
+This informational message is important to users. Please leave.,"@@ -74,7 +74,7 @@ public class SeleniumServer extends JettyServer { getClass().getClassLoader()) .asSubclass(Routable.class); Constructor<? extends Routable> constructor = rcHandler.getConstructor(ActiveSessions.class); - LOG.info(Bound legacy RC support); + LOG.finest(Bound legacy RC support); return constructor.newInstance(sessions); } catch (ReflectiveOperationException e) { // Do nothing.","**Code Review**
+
+* Log level decreased from `INFO` to `FINEST`, potentially hiding important information.
+* Catch block for `ReflectiveOperationException` is empty, silently swallowing potential errors. Consider logging or re-throwing the exception.","```markdown
+# Code Review
+
+* The use of `unmodifiableMap` is unnecessary and can be removed.
+* The log level change from `INFO` to `FINEST` may be excessive and can be reconsidered.
+```","This was annoying me, but I don't think it's worth making a change.","If you don't want to see it in the logs, why are you logging it?",IN,IN,IN,IN
+Why would this be called to copy a non-Date object?,"@@ -56,7 +56,15 @@ public final class IcebergDateObjectInspectorHive3 extends AbstractPrimitiveJava @Override public Object copyObject(Object o) { - return o == null ? null : new Date((Date) o); + if (o == null) { + return null; + } + + if (o instanceof Date) { + return new Date((Date) o); + } else { + return o; + } } }","**Code Review**
+
+* Simplified null check and object copy logic.
+* Removed unnecessary cast to Date.
+* Improved code readability with clear conditional statements.","This change adds a null check and handles both `Date` and non-`Date` objects, preventing a potential `ClassCastException`.",Can we remove this `copyObject` method and replace it with `getCopyOf` in `AbstractPrimitiveJava`?,Do we need to handle other types here? e.g. Timestamp,IN,IN,IN,IN
+Hm.. so this case doesn't work anymore?,,"**Code Review**
+
+* Removed test cases that set `name` to `None` and compare it. These tests are likely unnecessary and may be causing confusion.
+* No other issues found. The code appears clean and concise.","The removal of the potentially infinite loop of dependencies is a good step, but the original code was already not actually creating a loop. The added comments seem unnecessary.",why is this removed?,Why are these deleted?,IN,IN,IN,IN
+"Why does it have to be `""""` instead of an empty string  ",,"Code Review:
+- Introduced a new field `AZs` in `vpcConfig` struct, but it is set to an empty string. This might be intended to use default AZ options, but it would be more explicit to set it to a value that clearly indicates the use of default options, such as `default` or `[]string{}`. 
+
+Consider adding a comment to explain the intention behind setting `AZs` to an empty string. 
+
+The rest of the code looks clean and well-structured.",'Nit: consider using `composeConfig` to simplify config construction.',I think it's better to set AZs in envinit.,Do we need to test the case where AZs are specified?,IN,IN,IN,IN
+Nit: should not we hide them from printing out?,"@@ -44,6 +44,14 @@ var dataDirectory = flag.String(d, , Root Algorand daemon data path) var versionCheck = flag.Bool(v, false, Display and write current build version and exit) var telemetryOverride = flag.String(t, , `Override telemetry setting if supported (Use true, false, 0 or 1)`) +// the following flags aren't being used by the algoh, but are needed so that the flag package won't complain that +// these flags were provided but were not defined. We grab all the input flags and pass these downstream to the algod executable +// as an input arguments. +var peerOverride = flag.String(p, , Override phonebook with peer ip:port (or semicolon separated list: ip:port;ip:port;ip:port...)) +var listenIP = flag.String(l, , Override config.EndpointAddress (REST listening address) with ip:port) +var seed = flag.String(seed, , input to math/rand.Seed()) +var genesisFile = flag.String(g, , Genesis configuration file) + const algodFileName = algod const goalFileName = goal ","This code review is concise and to the point. It provides a clear evaluation of the code without unnecessary information.
+
+**Code Review**
+
+The code introduces new flags that are not being used by the algoh. These flags are added to satisfy the flag package's requirement to define all provided flags. The flags are then passed downstream to the algod executable as input arguments. The addition of these flags makes the code more comprehensive and future-proof.","'Added unnecessary flags, missed master and node variants, already at two lines.'",Can you update the docs to reflect these new flags?,why are these added here?,IN,IN,IN,IN
+Why do we need to cast to `str` here?,"@@ -317,7 +317,7 @@ def save_session(fname=, session=None, pickleProto=-1): if not fname: fname = conf.session if not fname: - conf.session = fname = utils.get_temp_file(keep=True) + conf.session = fname = cast(str, utils.get_temp_file(keep=True)) log_interactive.info(Use [%s] as session file % fname) if not session:","**Code Review**
+
+* The code has been modified to handle the case where `fname` is not provided. The session file path is now correctly assigned to `conf.session`.
+* The `cast(str,...)` function is used to ensure `fname` is a string, which is a good practice.
+* The rest of the code remains unchanged.
+* The changes are minor and do not affect the overall functionality of the code.","""Cast the return value of get_temp_file to str to match the type hint. Consider reporting upstream to distlib and vendor a fixed version when released.""","This should be fine, but can you double check?",Why do we need the cast?,IN,IN,AS,SE
+Use with statement for `f`,"@@ -0,0 +1,10 @@ +import argparse +from rdkit import Chem +sdf = Chem.SDMolSupplier(cdk2.sdf) +f = open(cdk2.smi,w) +for mol in sdf: + name = mol.GetProp(_Name) + smi = Chem.MolToSmiles( mol ) + f.write( {}\t{}\n.format(name,smi)) +f.close() +","**Code Review**
+
+* Missing imports: `argparse` is imported but not used.
+* Unclear variable `cdk2.sdf` and `cdk2.smi` - consider using constants or descriptive variables.
+* Potential file descriptor leak: `f` is not explicitly closed in case of an exception.
+* Consider using a `with` statement to ensure file is properly closed.
+* Magic string `_Name` - consider using a named constant or attribute.
+* Code does not handle any potential errors when reading or writing files.
+* Code could benefit from docstrings or comments to explain its purpose and functionality.","**Code Review**
+
+* Use `with` statement for file opening to ensure proper closure.
+* Consider using `read_evokeds` for reading SMILES strings from RDKit.
+* Redundant import of `argparse` which is not used in the code.
+* Missing docstring or comments to explain the purpose of the script.",You should not have to put quotes around the file name.,I don't think this is used anywhere?,AS,IN,AS,IN
+"s it the best way to tag ""foo"" of ""`define foo..."" with constant kind? Introducing ""d/definition"" kind and tagging the ""foo"" with the definition kind is an alternative way. Using the unified kind ""constant"" in many areas reduces the information that client tools get from a tags file. In my experience, it is better to tag different things with different kinds. If ctags hides the differences, and just reports various language objects as ""constant,"" in some cases, a client tool must parse the raw.sv source file for distinguishing whether a given tag is ""`define""'ed or not. IMHO, ctags should not be too smart. Instead, ctags should be stupid; it should report what it sees in source input files as-is to client tools that will do something smart.",,"**Code Review**
+
+* The code is mostly clear, but some magic numbers (-2, -16) could be replaced with named constants for better readability.
+* The comment about revising the symbol table code is unclear and seems unrelated to the enum changes.
+* The new enum values are not explained in the comment, making it harder to understand the changes.
+* The enum values are not consistently named (e.g., K_DEFINE vs K_CONSTANT).","""Introducing a new enum with arbitrary values (-16, KEYWORD_NONE) without a clear explanation or justification. How does this impact performance or functionality?""",(style) space prohibited before that '=' (ctx:VxV),"Should this be -16, or -17?",AS,IN,IN,AS
+How can there be a configured max ipset size? Surely we need to write ipsets with however many members are implied by the Calico datastore?,"@@ -32,6 +32,8 @@ type Config struct { RuleRendererOverride rules.RuleRenderer IPIPMTU int + MaxIPSetSize int + IptablesRefreshInterval time.Duration RulesConfig rules.Config","**Code Review**
+
+* The addition of new fields `MaxIPSetSize` and `IptablesRefreshInterval` is straightforward and well-structured.
+* The use of `time.Duration` for `IptablesRefreshInterval` is a good choice.
+* The `RuleRendererOverride` field is not explicitly used in the updated code snippet, consider removing it or documenting its usage.","No change, as the provided code snippet appears to be a Go struct definition and the review comment seems to be a high-level design discussion rather than a code review.",`MaxIPSetSize` should have a `Default` value.,Could you please change this to `MaxIPSetSize int64`? We should use `int64` for counters.,IN,IN,AS,AS
+"we'll need to delete this whole file, right?","@@ -92,7 +92,7 @@ namespace System.Diagnostics.Metrics T delta, params KeyValuePair<string, object?>[] tags) { - this.RecordMeasurement(delta, tags); + this.RecordMeasurement(delta, new ReadOnlySpan<KeyValuePair<string, object?>>(tags)); } } }","This change introduces a subtle but potentially significant performance improvement by avoiding unnecessary object creation. The `tags` parameter is now passed directly to `RecordMeasurement` as a `ReadOnlySpan`, rather than being copied into a new array. This should be a minor but welcome optimization.","`Extract a helper method `batchStorageLevel()` to improve code readability and reusability, as hinted by the comment.`","Can you help me understand why this is necessary? I don't understand why this RecordMeasurement call was not using the `Span<T>` overload, and why we need to create a `ReadOnlySpan` from the `KeyValuePair` array.",Nit: we could also use a `ReadOnlySpan` in the `RecordMeasurement` method.,AS,IN,IN,AS
+"this reads like ""mock database cache"", maybe a clearer name",,"**Code Review**
+
+* The code snippet appears to be a Go struct definition with several fields.
+* The addition of `mockDBcache` suggests a new dependency has been introduced.
+* The code is clean and concise, but it would benefit from a brief description of each field.",The addition of a new field (`mockDBcache`) in the middle of existing fields makes the diff harder to review.,Why not mockCache?,"It is a little bit hard to understand, mockDBcache means dirty block cache?",AS,IN,IN,IN
+"@aokolnychyi / @RussellSpitzer / @holdenk Spark3 gives ScanBuilder - abstraction - to define all types of Scans (Batch, MicroBatch & Continuous). But, the current implementation / class modelling - has SparkBatchScan as the Scan implementation. Looking at some of the concerns of BatchScan - all the way from the State maintenance of a single SnapshotId to read from, the asOfTimeStamp & features like VectorizedReads - all of these don't seem relevant to Streaming Scans. So, I feel that we need to divide out Streaming Scans into a different class. Does this thought process - make sense? If we go by this route - do you folks know - how to pass different Scan objects to Spark based on Batch vs Streaming?","@@ -159,8 +159,14 @@ public class SparkScanBuilder implements ScanBuilder, SupportsPushDownFilters, S @Override public Scan build() { - return new SparkBatchQueryScan( - spark, table, caseSensitive, schemaWithMetadataColumns(), filterExpressions, options); + // TODO: understand how to differentiate that this is a spark streaming microbatch scan. + if (false) { + return new SparkBatchQueryScan( + spark, table, caseSensitive, schemaWithMetadataColumns(), filterExpressions, options); + } else { + return new SparkMicroBatchStreamScan( + spark, table, caseSensitive, schemaWithMetadataColumns(), filterExpressions, options); + } } public Scan buildMergeScan() {","**Code Review**
+
+* The `build()` method has a temporary workaround with a hardcoded `false` condition. This should be refactored to a proper conditional statement or removed if it's a temporary solution.
+* The `buildMergeScan()` method is not reviewed, but it's recommended to ensure it's properly implemented and tested.
+* The code could benefit from additional comments or documentation to explain the purpose of the `TODO` comment and the logic behind the `build()` method.","""This check should be reworded since it's done before determining TPQ/SPQ. Consider removing the unnecessary `if (false)` condition.""",Please remove this TODO,This should be fixed in this PR,AS,AS,IN,AS
+That's a huge load of new dependencies. I think it's better to create a reload function on ScriptManager and control with enum instead.,"@@ -35,6 +35,11 @@ #include monster.h #include scheduler.h #include databasetasks.h +#include actions.h +#include movement.h +#include weapons.h +#include globalevent.h +#include events.h extern Chat* g_chat; extern Game g_game;","This code snippet appears to be a simple header inclusion block. However, it is missing comments to explain the purpose of the included files and the external variables. The addition of new includes (`actions.h`, `movement.h`, `weapons.h`, `globalevent.h`, `events.h`) suggests a significant change to the codebase. It would be beneficial to include comments to explain these changes and their impact on the existing code.","**Code Review:**
+
+* Unnecessary header includes for `laplacian_element` functionality.",why are all these includes here?,"You could have made a `#include ""monster_ai.h""` instead, no?",AS,IN,IN,AS
+if end_level == -1 or end_level == (self.num_ins - 1): for end_level is the Index of the end input backbone level.,"@@ -85,13 +85,14 @@ class FPN(BaseModule): self.fp16_enabled = False self.upsample_cfg = upsample_cfg.copy() - if end_level == -1: + if end_level == -1 or end_level == self.num_ins: + # if end_level == len(inputs) or end_level == -1, extra level is allowed self.backbone_end_level = self.num_ins assert num_outs >= self.num_ins - start_level else: # if end_level < inputs, no extra level is allowed self.backbone_end_level = end_level - assert end_level <= len(in_channels) + assert end_level < len(in_channels) assert num_outs == end_level - start_level self.start_level = start_level self.end_level = end_level","**Code Review**
+
+The code is concise and readable. However, the additional `or` condition in the `if` statement at line 3 seems unnecessary and may cause confusion. It's not immediately clear why `end_level == self.num_ins` is a valid condition. 
+
+The code could benefit from more descriptive variable names, such as `num_levels` instead of `num_outs` and `num_ins`. 
+
+Overall, the code is well-structured and easy to follow.",`E501 line too long (83 > 80 characters)`,please use `self.num_inputs` for consistency,E501 line too long (83 > 80 characters),AS,IN,IN,IN
+I'm okay with leaving VCPULimit and MemoryLimit on our internal model,"@@ -72,11 +72,11 @@ type Task struct { Containers []*Container // Volumes are the volumes for the task Volumes []TaskVolume `json:volumes` - // VCPULimit is a task-level limit for compute resources. A value of 1 means that + // Cpu is a task-level limit for compute resources. A value of 1 means that // the task may access 100% of 1 vCPU on the instance - VCPULimit float64 `json:CPULimit,omitempty` - // MemoryLimit is a task-level limit for memory resources in bytes - MemoryLimit int64 `json:Memory,omitempty` + Cpu float64 `json:CPULimit,omitempty` + // Memory is a task-level limit for memory resources in bytes + Memory int64 `json:Memory,omitempty` // DesiredStatusUnsafe represents the state where the task should go. Generally, // the desired status is informed by the ECS backend as a result of either // API calls made to ECS or decisions made by the ECS service scheduler.","Code review:
+- Renamed `VCPULimit` to `Cpu` for clarity.
+- Renamed `MemoryLimit` to `Memory` for consistency.
+- Removed `omitempty` tags for `Cpu` and `Memory` as they are required fields.",Simplify field names to remove redundancy and improve readability. Consider removing `diffsuppress` as it's likely no longer needed.,"I think we want to keep the `VCPULimit` and `MemoryLimit` fields and add new `Cpu` and `Memory` fields that are JSON tagged `omitempty` and `json:""-""`",@baude is this a BC break?,IN,IN,IN,IN
+same concern here about difference in the write scalar implementation. I am not sure if this could present a consensus problem or not,"@@ -188,7 +188,7 @@ public final class EthHash { out.writeLongScalar(header.getTimestamp()); out.writeBytes(header.getExtraData()); if (header.getBaseFee().isPresent()) { - out.writeLongScalar(header.getBaseFee().get()); + out.writeUInt256Scalar(header.getBaseFee().get()); } out.endList(); return Bytes32.wrap(","**Code Review**
+
+*   The code modification is a simple change from `writeLongScalar` to `writeUInt256Scalar` for `header.getBaseFee().get()`.
+*   The change is likely to ensure that the base fee is written in the correct format.
+*   The code remains readable and the change is straightforward.",'Simplify the condition using `|` instead of `+` and use `in.readUnsignedByte()` for bitwise operations.',is there a test for this?,This seems unrelated?,IN,IN,IN,IN
+"Thank you! That's better, especially the conversion test should not test the mkString method :)","@@ -365,7 +365,7 @@ public abstract class AbstractMultimapTest extends AbstractTraversableTest { @Test public void shouldConvertToMap() { Multimap<Integer, Integer> mm = emptyIntInt().put(1, 2).put(1, 3); - assertThat(mm.asMap().get(1).get().mkString(,)).isEqualTo(2,3); + assertThat(mm.asMap().get(1).get()).isEqualTo(HashSet.of(2, 3)); } // -- biMap","**Code Review**
+
+* The test method `shouldConvertToMap` is well-named and concise.
+* The assertion uses `mkString` to compare a collection, which is not the most idiomatic way to compare a collection in Java. Using `isEqualTo(HashSet.of(2, 3))` is a better approach.
+* The test only covers one scenario, it would be good to add more test cases to cover edge cases and different scenarios.","This suggestion is on the right track, but it would be more idiomatic to use `Multiset` from Guava, not `HashSet`. The comparison could be done using `Multiset.equals`.",why not `Set.of`?,Why not `assertEquals`?,AS,AS,IN,IN
+Ditto for not adding this to the axe namespace.,"@@ -124,3 +124,5 @@ class VirtualNode extends axe.AbstractVirtualNode { return this._cache.boundingClientRect; } } + +axe.VirtualNode = VirtualNode;","**Code Review**
+
+* This change adds a new class `VirtualNode` to the `axe` namespace.
+* The class extends `axe.AbstractVirtualNode` but does not add any new functionality.
+* The `axe.VirtualNode` assignment at the end is redundant and can be removed.
+* The code is concise but lacks documentation and comments to explain its purpose and behavior.","This code snippet appears to be a fix for a potential issue with the initialization of `frappe.ui.Tree`, where `root_value` is not set by default. The fix ensures that `root_value` is set to `this.label` to prevent the component from breaking.",Why are we exporting this?,Can we remove the `axe.` prefix here?,IN,IN,IN,IN
+"We should initialize the observation in the constructor of the Script class - otherwise, we don't have this feature for mitmdump.","@@ -225,6 +225,7 @@ class ConsoleMaster(flow.FlowMaster): if err: print >> sys.stderr, Script load error:, err sys.exit(1) + script.ObserveScripts(self, i) if options.outfile: err = self.start_stream_to_path(","**Code Review**
+
+* Missing docstring for the `ObserveScripts` method.
+* Variable `err` is reassigned without checking its original value, potential for lost error information.
+* Method chaining is used, but the `if options.outfile` condition could be extracted into a separate method for better readability.",Refactor to reduce duplication by using `ForkProcess` instead of direct process handling.,Should this be inside the try block?,"Can we use `script.ObserveScripts(self)` instead of `script.ObserveScripts(self, i)`?",AS,IN,AS,IN
+Why is this necessary? Just in order to get an indexed loop?,"@@ -2467,11 +2467,17 @@ hipError_t hipHccGetAcceleratorView(hipStream_t stream, hc::accelerator_view** a namespace hip_impl { std::vector<hsa_agent_t> all_hsa_agents() { std::vector<hsa_agent_t> r{}; - for (auto&& acc : hc::accelerator::get_all()) { + auto accelerators = hc::accelerator::get_all(); + for (int i = 0; i < accelerators.size(); i++) { + auto&& acc = accelerators[i]; const auto agent = acc.get_hsa_agent(); if (!agent || !acc.is_hsa_accelerator()) continue; + // If device is not in visible devices list, ignore + if (std::find(g_hip_visible_devices.begin(), g_hip_visible_devices.end(), (i - 1)) == + g_hip_visible_devices.end()) continue; + r.emplace_back(*static_cast<hsa_agent_t*>(agent)); } ","**Code Review**
+
+* The loop variable `acc` is reassigned, which is unnecessary and can lead to confusion. Consider using a different variable name.
+* The `std::find` call can be replaced with a `std::find_if` to improve readability.
+* The cast to `hsa_agent_t*` is unnecessary and can be removed by using a `static_cast` on the pointer itself.
+* The comment about ignoring devices not in the visible devices list is unclear. Consider removing it or rephrasing it to explain why it's necessary.
+* The code could benefit from more whitespace to improve readability.","No code is provided to review. The original text appears to be a comment discussing a separate piece of code, not the code snippet you provided.",Can you explain this change?,I think this can be simplified to `std::find_if` with a predicate.,AS,IN,IN,IN
+"Do you know somehow that this was the culprit? Even 1 minute is a lot, so I would expect the bug to lie somewhere else.","@@ -81,12 +81,12 @@ public class MetricManagerTest { @Test public void managerEmitterHandlingTest() throws Exception { this.emitter.purgeAllData(); - final Date from = DateTime.now().minusMinutes(1).toDate(); + final Date from = DateTime.now().minusMinutes(10).toDate(); this.metric.notifyManager(); this.emitterWrapper.countDownLatch.await(10L, TimeUnit.SECONDS); - final Date to = DateTime.now().plusMinutes(1).toDate(); + final Date to = DateTime.now().plusMinutes(10).toDate(); final List<InMemoryHistoryNode> nodes = this.emitter.getMetrics(FakeMetric, from, to, false); assertEquals(Failed to report metric, 1, nodes.size());","**Code Review**
+
+*   **Code consistency**: The code uses both `minusMinutes(1)` and `minusMinutes(10)` in two different places. It would be more consistent to use a constant or a parameter for the time duration.
+*   **Magic numbers**: The numbers 1 and 10 are used as magic numbers. Consider defining constants for these values to improve code readability and maintainability.
+*   **Test robustness**: The test waits for 10 seconds for the latch to be released. Consider increasing the wait time or using a more robust way to wait for the latch to ensure the test is not flaky.","""Consider adding assertions to verify the parsed dates match the expected values, rather than just the pattern. Also, define a constant for the time interval instead of hardcoding it with `System.currentTimeMillis()`.""",why do we need to change this?,why did you change this?,IN,IN,IN,IN
+is reserved filed name the only possible reason this could fail?,"@@ -96,14 +96,15 @@ func (v *Validator) Validate(searchAttributes *commonpb.SearchAttributes, namesp } for saName, saPayload := range searchAttributes.GetIndexedFields() { - if IsReservedField(saName) { - return serviceerror.NewInvalidArgument(fmt.Sprintf(%s is Temporal reserved field name, saName)) + if !typeMap.IsDefined(saName) { + return serviceerror.NewInvalidArgument(fmt.Sprintf(%s is not a valid search attribute name, saName)) } - saType, err := typeMap.GetType(saName) + saType, err := typeMap.getType(saName, customCategory|predefinedCategory) if err != nil { - return serviceerror.NewInvalidArgument(fmt.Sprintf(%s is not a valid search attribute name, saName)) + return serviceerror.NewInvalidArgument(fmt.Sprintf(%s attribute can't be set in SearchAttributes: reserved field name, saName)) } + _, err = DecodeValue(saPayload, saType) if err != nil { var invalidValue interface{}","**Code Review**
+
+* Removed unnecessary check for reserved field names, now checks if type is defined.
+* Improved error messages for invalid attribute names and values.
+* Added `customCategory|predefinedCategory` flags to `getType` function call.
+* Variable `invalidValue` is declared but not used, consider removing it.","The addition of the `typeMap.getType` call with custom and predefined categories is a good fix for the initial issue. However, the rest of the function still appears to be in need of refactoring for clarity and robustness.",Can we have a separate error message for custom attributes?,I think this error message is not correct.,IN,IN,IN,IN
+I'm worried about we hide some important log here,"@@ -88,7 +88,7 @@ func (a *attestor) loadSVID(ctx context.Context) (*x509.Certificate, *ecdsa.Priv svid := a.readSVIDFromDisk() if len(fResp.PrivateKey) > 0 && svid == nil { - a.c.Log.Warn(Private key recovered, but no SVID found) + a.c.Log.Debug(Private key recovered, but no SVID found) } var keyData []byte","**Code Review**
+
+* Minor logging change: `Warn` to `Debug` is a good change, but consider adding a logging level or configuration to handle this specific case.
+* The code looks clean and concise, but consider adding a comment to explain the purpose of the `keyData` variable.
+* The function signature and type hints are clear and well-formatted.","* Reduced log level from Warn to Debug, which is less severe and more suitable for a situation where a private key is recovered but no SVID is found.",This one was really annoying me.,should this be moved to `renew`?,IN,IN,IN,AS
+"we got no chance that `err` is not nil here, need to revisit how `NewUpstreamController` is defined.","@@ -67,5 +67,8 @@ func (hs *HandlerStub) Start() { klog.Errorf(New upstream controller failed with error: %v, err) return } - upstream.Start() + if err := upstream.Start(); err != nil { + klog.Errorf(Failed to start upstream with error: %v, err) + return + } }","**Code Review**
+
+* The new code handles the error case correctly, logging the error and returning from the function.
+* The code is well-structured and easy to read.
+* However, the error message could be more descriptive. Instead of ""Failed to start upstream with error"", consider ""Failed to start upstream controller: %v"".
+* The variable name `err` could be more descriptive. Consider renaming it to `startErr`.","This change adds error handling to the `Start` method, but it does not address the potential issue of out-of-order processing of updates and deletes of the same resource.","I think it would be better to log the error at the caller, so we don't lose the context of the `if err!= nil`",is this different from the error returned by NewUpstream?,AS,IN,IN,IN
+Missing fallback to MessageTemplates.ValueFormatter.Instance,"@@ -49,12 +49,18 @@ namespace NLog.LayoutRenderers private const int MaxInitialRenderBufferLength = 16384; private int _maxRenderedLength; private bool _isInitialized; + private IValueFormatter _valueFormatter; /// <summary> /// Gets the logging configuration this target is part of. /// </summary> protected LoggingConfiguration LoggingConfiguration { get; private set; } + /// <summary> + /// Value formatter + /// </summary> + protected IValueFormatter ValueFormatter => _valueFormatter ?? (_valueFormatter = Resolve<IValueFormatter>()); + /// <summary> /// Returns a <see cref=System.String/> that represents this instance. /// </summary>","**Code Review**
+
+* Introduced a new field `_valueFormatter` without explanation, consider adding a comment.
+* `ValueFormatter` property uses the null-coalescing operator (`??`) to initialize the field lazily, which is a good practice.
+* `Resolve` method is not defined in the provided snippet, ensure it's properly implemented elsewhere in the codebase.
+* The rest of the code appears to be well-structured and follows standard.NET naming conventions.",Adds cross-platform support with IValueFormatter and Resolve pattern.,"Same as above, we should not create the formatter until we need it.","I don't think we should cache this, we might need to change the formatter later on.",IN,IN,AS,AS
+"Just to confirm, this will take care of all the nodes in graph. right?","@@ -230,7 +230,12 @@ public class ExecutionControllerUtils { continue; // case UNKNOWN: case READY: - node.setStatus(Status.KILLING); + // if flow status is EXECUTION_STOPPED due to e.g. pod failure, set sub node to KILLED + if (exFlow.getStatus()==Status.EXECUTION_STOPPED) { + node.setStatus(Status.KILLED); + } else { + node.setStatus(Status.KILLING); + } break; default: node.setStatus(Status.FAILED);","**Code Review**
+
+* The code has been modified to add a conditional statement to set the node status to KILLED when the flow status is EXECUTION_STOPPED. This is a logical improvement.
+* The `continue` statement is unnecessary as the code will continue to execute the next iteration of the loop regardless.
+* The `default` case sets the node status to FAILED, but it's unclear what conditions would trigger this case. Consider adding a comment or a separate case to handle this scenario.
+* The variable names are clear and concise, but consider adding a comment to explain the purpose of the `exFlow` variable.","This change looks right, as it correctly handles the edge case where the flow status is EXECUTION_STOPPED before attempting to kill the node.",Should this be a different status?,can we move this logic to the sub job level instead?,IN,IN,AS,IN
+ineffectual assignment to `err` (from `ineffassign`),"@@ -245,7 +245,15 @@ func (cds *contentDirectoryService) Handle(action string, argsXML []byte, r *htt UpdateID: cds.updateIDString(), }, nil case BrowseMetadata: - result, err := xml.Marshal(obj) + node, err := cds.vfs.Stat(obj.Path) + if err != nil { + return nil, err + } + upnpObject, err := cds.cdsObjectToUpnpavObject(obj, node, host) + if err != nil { + return nil, err + } + result, err := xml.Marshal(upnpObject) if err != nil { return nil, err }","**Code Review**
+
+* Introduced a new variable `node` which is not used outside the `if err!= nil` block. Consider removing it to improve code readability.
+* The `cds.cdsObjectToUpnpavObject` function returns an error, but it's not handled in the `BrowseMetadata` case. Consider adding error handling to prevent potential crashes.
+* The `xml.Marshal` call returns an error, but it's not checked. Consider adding error handling to prevent potential crashes.","""Consider adding a log message to indicate the omission of the file.""",Can we move this to be before the `if err!= nil` line above?,It looks like we should be checking for an error here.,IN,IN,IN,AS
+I'm wondering if a positive test case is needed here? Then we might compare the result DataFrame with a pre-created Koalas DataFrame.,"@@ -2608,3 +2608,16 @@ class GroupByTest(ReusedSQLTestCase, TestUtils): self.assertRaises( ValueError, lambda: kdf.groupby([(B, class), (A, name)]).get_group(mammal) ) + + def test_median(self): + kdf = ks.DataFrame( + { + a: [1.0, 1.0, 1.0, 1.0, 2.0, 2.0, 2.0, 3.0, 3.0, 3.0], + b: [2.0, 3.0, 1.0, 4.0, 6.0, 9.0, 8.0, 10.0, 7.0, 5.0], + c: [3.0, 5.0, 2.0, 5.0, 1.0, 2.0, 6.0, 4.0, 3.0, 6.0], + }, + columns=[a, b, c], + index=[7, 2, 4, 1, 3, 4, 9, 10, 5, 6], + ) + with self.assertRaisesRegex(ValueError, accuracy must be an integer; however): + kdf.groupby(a).median(accuracy=a)","**Code Review**
+
+* The test case `test_median` is well-structured and clearly tests the `median` method with an invalid `accuracy` parameter.
+* The error message in the `assertRaisesRegex` call is a good practice to ensure the correct error message is raised.
+* However, the `lambda` function in the first test case is unnecessary and can be replaced with a simple function call.
+* The test case `test_median` could benefit from a more descriptive name, e.g., `test_median_with_invalid_accuracy`.","""This test case appears to be a regression test for a known issue with the `median` method. It's a good idea to consider reusing the parallelizable implementation for `kurt` as well.""",This is the wrong test.,should this be 0.5?,AS,IN,IN,AS
+I would have tested 304 only there.,"@@ -120,7 +120,8 @@ def default_bucket(request): try: response = request.invoke_subrequest(subrequest) except httpexceptions.HTTPException as error: - if error.content_type == 'application/json': + is_redirect = error.status_code < 400 + if error.content_type == 'application/json' or is_redirect: response = reapply_cors(subrequest, error) else: # Ask the upper level to format the error.","**Code Review**
+
+The code is concise and handles potential exceptions in a clear manner. However, the new variable `is_redirect` could be removed in favor of a direct comparison `error.status_code < 400`. The addition of a comment explaining the purpose of `reapply_cors` would improve code readability. 
+
+```python
+@@ -120,7 +120,7 @@ def default_bucket(request): 
+try: 
+    response = request.invoke_subrequest(subrequest) 
+except httpexceptions.HTTPException as error: 
+    if error.content_type == 'application/json' or error.status_code < 400: 
+        response = reapply_cors(subrequest, error) 
+    else: 
+        # Ask the upper level to format the error. 
+```",`Consider using a more descriptive variable name instead of 'is_redirect'.`,"The `error` object is not defined in this scope, we should use the `error` from the `try` block.","I would prefer if this was a `try`/`except` with a specific exception, as you know the `status_code` and `content_type` already.",AS,IN,AS,IN
+Initialize `needs_reshape_` with true and call `Reshape` method,"@@ -23,6 +23,7 @@ void MemoryDataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bottom, added_label_.Reshape(batch_size_, 1, 1, 1); data_ = NULL; labels_ = NULL; + needs_reshape_ = false; added_data_.cpu_data(); added_label_.cpu_data(); }","**Code Review**
+
+* The new lines are clearly marked with `@@` symbols, indicating a clear indication of changes.
+* The code is concise and easy to read.
+* The variable `needs_reshape_` is initialized to `false` and then set to `true` in the same method, which could be removed if it's not used elsewhere.
+* The `added_data_.cpu_data()` and `added_label_.cpu_data()` calls are not commented, it would be good to add a brief description of what these lines are doing.",No changes to note.,Why not just remove this variable?,This is not needed.,AS,IN,IN,IN
+"I don't think we need to necessarily check if that returned true or not, we should just remove the shutdown hook. Since nothing would check or do anything with this flag anyways.","@@ -145,6 +145,10 @@ public class TemporaryFilesystem { } public boolean deleteBaseDir() { - return baseDir.delete(); + boolean wasDeleted = baseDir.delete(); + if (wasDeleted) { + Runtime.getRuntime().removeShutdownHook(shutdownHook); + } + return wasDeleted; } }","**Code Review**
+
+* The new code is well-structured and easy to follow.
+* The addition of `wasDeleted` variable makes the code more readable.
+* The removal of the shutdown hook when the base directory is deleted is a good practice to prevent potential issues.
+* The return type is consistent with the method signature.
+* No unnecessary imports or variables are introduced.
+* The code is concise and efficient.","**Code Review**
+
+This change introduces a delay in deleting the base directory, deferring it until the shutdown hook is removed. However, this may introduce a timing issue where the directory is deleted before the hook is removed. Consider using a more robust approach to ensure the directory is deleted after the hook is removed.",What happens if the hook is already removed?,"I am not sure if we need to remove the hook in this case. The base dir is deleted anyway, so the hook should not be executed.",IN,IN,IN,AS
+"@reyang when exponentialhistogram arrives, we won't have any bits left for it.. unless we take Summary or make this 16 bits instead of current 8 bytes","@@ -23,10 +23,13 @@ namespace OpenTelemetry.Metrics { /* Type: - 0x10: Sum - 0x20: Gauge - 0x30: Histogram - 0x40: Summary (reserved) + 0x10 0b00010000: Sum + 0x20 0b00100000: Gauge + 0x40 0b01000000: Histogram + 0x50 0b01010000: HistogramWithBuckets + 0x60 0b01100000: HistogramWithMinMax + 0x70 0b01110000: HistogramWithMinMaxAndBuckets + 0x80 0b10000000: Summary (reserved) Point kind: 0x04: I1 (signed 1-byte integer)","**Code Review**
+
+* The code appears to be a C# enum definition for OpenTelemetry metrics types.
+* The enum values are well-documented with clear and concise comments.
+* The code is concise and easy to read.
+* However, it would be beneficial to add XML comments to the enum to provide additional documentation and improve discoverability.
+* Consider adding a summary or description for the enum to provide context for its usage.",No changes. The addition is minor and does not affect the code's functionality.,These types should be marked as internal,"This is the new code, previously it was `0x50`",IN,IN,AS,IN
+"... is probably automatically vectorized, since it has the same speed as `System.arraycopy`","@@ -345,6 +345,18 @@ final class BitMappedTrie<T> implements Serializable { return index; } + Object[] toArray() { + final Object[] results = new Object[length]; + visit((index, leaf, start, end) -> { + final int copied = end - start; + for (int i = start; i < end; i++) { + results[index + i] = type.getAt(leaf, i); + } + return index + copied; + }); + return results; + } + int length() { return length; } } ","**Code Review**
+
+* The `toArray()` method is a good addition to the class, providing a convenient way to retrieve the trie's contents as an array.
+* The implementation is straightforward and efficient.
+* However, the method's name could be more descriptive, e.g., `getElements()`.
+* The `length()` method is redundant, as the `toArray()` method already returns the correct length. Consider removing it.",The `toArray()` method seems to be an afterthought and can be simplified by returning a `List` instead of an array. The `length()` method is redundant and can be removed since `length` is already a field.,nit: add `@CheckForNull` annotation,I wonder if it would make sense to have a `BitMappedTrie.getAt(int index)` that returns the leaf at that index.,AS,IN,IN,IN
+Does it work to run all the sil diagnostic passes before we serialize? That would be more consistent with what the normal compiler does in `FrontendTool.cpp : performCompileStepsPostSILGen()`,"@@ -1939,6 +1939,9 @@ unsigned SwiftExpressionParser::Parse(DiagnosticManager &diagnostic_manager, // - Some passes may create new functions, but only the functions defined in // the lldb repl line should be serialized. if (swift_ast_ctx->UseSerialization()) { + // Run all the passes before differentiation before we serialize. + runSILMandatoryOptPreDiffPasses(*sil_module); + // Serialize the module now. auto expr_module_dir = swift_ast_ctx->GetReplExprModulesDir(); assert(expr_module_dir != nullptr); llvm::SmallString<256> filename(expr_module_dir);","**Code Review**
+
+* The addition of two new lines seems to be a new feature. However, there is no explanation or documentation on what these new lines do or why they are necessary.
+* The variable `sil_module` is not defined in the given snippet. It is assumed to be defined elsewhere, but it would be helpful to include its definition for clarity.
+* The use of `runSILMandatoryOptPreDiffPasses` is not immediately clear. What are these passes and why are they necessary?
+* The comment ""Run all the passes before differentiation before we serialize"" is not accurate. The passes are run before differentiation, but the comment does not explain why this is necessary.
+* The `assert` statement is not necessary if the function `GetReplExprModulesDir` is guaranteed to return a non-null pointer.","Here is a concise code review:
+
+`Adding new logic to run SIL passes before serialization. Consider how this affects parser state caching, especially when serializing.`","This will be executed if `swift_ast_ctx->UseSerialization()` is true, but that is the default. Is this a no-op?",So the mandatory passes are serialized now?,IN,IN,IN,IN
+"We could probably do 1 sec if we have time, and hence exit early if we have small number of clients. So LB = 60 sec. Grace = 10secs. So 50Sec window, if NumClients < 50, Close 1 every second. Then exit when NumClients == 0.","@@ -479,6 +479,11 @@ func (o *Options) ProcessConfigFile(configFile string) error { errors = append(errors, err) continue } + if dur < 30*time.Second { + err := &configErr{tk, fmt.Sprintf(invalid lame_duck_duration of %v, minimum is 30 seconds, dur)} + errors = append(errors, err) + continue + } o.LameDuckDuration = dur case trusted: switch v.(type) {","**Code Review**
+
+The addition of a new condition to check the `lame_duck_duration` value is well-structured and follows the existing pattern of error handling. However, the variable `dur` is not declared in the function scope, which may lead to a compilation error. Consider declaring it at the top of the function or passing it as a parameter. 
+
+The error message is also well-formatted and informative. Overall, the change looks good.","""Expected 'STRING', found '<<' (and 6 more errors)""","I wonder if we should add a `time.Duration` option to `ProcessConfigFile` so that the duration is checked against the actual config file value, not the parsed value?",This should be `>=`,IN,IN,AS,AS
+what mypy warning does this address? I'm confused by this change.,"@@ -26,7 +26,7 @@ class EarlyStopException(Exception): # Callback environment used by callbacks CallbackEnv = collections.namedtuple( - LightGBMCallbackEnv, + CallbackEnv, [model, params, iteration,","**Code Review**
+
+* The code is a minor modification to a class definition, specifically changing the name of a namedtuple from `LightGBMCallbackEnv` to `CallbackEnv`.
+* The change is consistent with the rest of the code, but it's unclear why the name was changed.
+* The code is otherwise well-structured and follows standard Python conventions.","The code snippet appears to be a class definition change in a Python script. The change involves renaming a namedtuple from ""LightGBMCallbackEnv"" to ""CallbackEnv"".",why change it?,Why is this renamed?,IN,IN,IN,IN
+I don't think it's necessary to change this for the history plugin tests?,"@@ -17,7 +17,8 @@ class PluginSetup(unittest.TestCase): def test_a_statsd_timer_is_used_for_history_if_configured(self): settings = { statsd_url: udp://127.0.0.1:8125, - includes: kinto.plugins.history + includes: kinto.plugins.history, + storage_strict_json: True } config = testing.setUp(settings=settings) with mock.patch('kinto.core.statsd.Client.timer') as mocked:","**Code Review**
+
+* The code snippet appears to be a unit test for a plugin setup, specifically testing the use of statsd timer for history if configured.
+* The addition of `storage_strict_json: True` seems unrelated to the test and may be a leftover from previous code.
+* The `mock.patch` decorator is correctly used to mock the `kinto.core.statsd.Client.timer` object.
+* The test setup and teardown are not shown, but should be reviewed for completeness and accuracy.","""Unexpected change in `settings` dictionary without corresponding update in `config.toml` file.""",I wonder if we should have a test with `storage_strict_json` set to `False`,Not sure what this setting does. Is it something we should have by default?,AS,IN,AS,AS
+can you use LINQ's `All` instead? Should be a side-effects free one liner with that.,"@@ -118,9 +118,18 @@ namespace AutoRest.Swagger headerType = null; } + // Response format List<Stack<IModelType>> typesList = BuildResponses(method, headerType); + // if each of the responses have explicitly set their nullable property to false, we will have to consider it + bool isNonNullableReturnType = true; + _operation.Responses.Keys.ForEach(key => + { + isNonNullableReturnType = isNonNullableReturnType && !(_operation.Responses[key].Extensions?.Get<bool>(x-nullable) ?? true); + }); + method.IsXNullableReturnType = !(isNonNullableReturnType); + method.ReturnType = BuildMethodReturnType(typesList, headerType); if (method.Responses.Count == 0) {","**Code Review**
+
+* The addition of a new variable `isNonNullableReturnType` and the use of `ForEach` on a dictionary's keys collection are readable and efficient.
+* The usage of null-conditional operator (`?.`) and the null-coalescing operator (`??`) is good practice.
+* The naming of the variable `x-nullable` is unclear and could be improved.
+* The method `BuildMethodReturnType` is not defined in this snippet, but it's likely a good idea to review its implementation as well.
+* The final check for `method.Responses.Count == 0` could be extracted into a separate method for better readability.",Assert that `value` is a string to prevent unexpected behavior.,Is this going to be expensive?,What if the response is not nullable by default and user explicitly set it to nullable?,AS,IN,IN,IN
+Please don't create new fields with the `m` prefix. I'd rather mix than introduce more of these.,"@@ -1,10 +1,10 @@ package com.fsck.k9.activity; -import android.app.ListActivity; import android.os.Bundle; import android.view.KeyEvent; import android.view.MotionEvent; import android.widget.AdapterView; +import android.widget.ListAdapter; import android.widget.ListView; import com.fsck.k9.K9;","**Code Review**
+
+* Removed unnecessary import statement for `android.app.ListActivity`.
+* Added missing import statement for `android.widget.ListAdapter`.
+* No other changes.",Unused import: android.app.ListActivity.,Is this really needed?,I would suggest to remove this one as well.,IN,IN,IN,AS
+And again. The reason it's bad is that if someone uses a JDK not produced by Oracle they won't have this class.,"@@ -19,6 +19,8 @@ package org.openqa.grid.web; import com.google.common.collect.Maps; +import com.sun.org.glassfish.gmbal.ManagedObject; + import org.openqa.grid.internal.Registry; import org.openqa.grid.internal.utils.GridHubConfiguration; import org.openqa.grid.web.servlet.DisplayHelpServlet;","**Code Review**
+
+* New imports added without clear justification or explanation. Consider adding comments to explain the purpose of these new imports.
+* No other issues or improvements noted.","Unused imports, remove.","this is glassfish dependency, so I don't think this is the way to go.",Is this dependency still required?,IN,IN,IN,IN
+Can you please revert changes to files in the `thoughtworks` package? This is legacy code and we will eventually phase out RC.,"@@ -24,6 +24,7 @@ import org.openqa.selenium.WebDriver; import org.openqa.selenium.WebElement; import java.io.IOException; +import java.io.UncheckedIOException; import java.net.URL; import java.nio.charset.StandardCharsets; import java.util.ArrayList;","**Code Review**
+
+* Added import statement for `java.io.UncheckedIOException` without explanation or usage. Consider removing or documenting its purpose.
+* No other notable changes.","`The variable `dbf` can be removed from the scope after static initialization, allowing it to be garbage collected.`",Why not throw checked exception?,Could we use `WrappedIOException` instead?,IN,IN,IN,AS
+@disordinary would you be able to configure your editor to use the `.editorconfig` file so that we can avoid final newline changes?,"@@ -29,4 +29,4 @@ describeComponent( expect(component._state).to.equal('inDOM'); }); } -); +);","Code review:
+* The diff shows a single line change, likely an addition of a semicolon at the end of the file.","`{ beforeEach: options.beforeEach, afterEach: options.afterEach }` is simpler and doesn't require an import, making it a slightly more elegant solution.",can we revert these changes?,nit: remove whitespace changes,IN,IN,IN,IN
+This needs an end keyword,"@@ -192,6 +192,11 @@ describe Travis::Build::Script::R, :sexp do assert: true, echo: true, retry: true, timing: true] end + it 'does BiocCheck if requested' do + data[:config][:bioc_check] = true + should include_sexp [:cmd, /.*BiocCheck.*/, + assert: true, echo: true, timing: true] + it 'does install bioc with bioc_packages' do data[:config][:bioc_packages] = ['GenomicFeatures'] should include_sexp [:cmd, /.*biocLite.*/,","**Code Review**
+
+* The test cases are well-structured and clearly define the expected behavior.
+* The use of regular expressions in the `should include_sexp` blocks is a good approach for matching expected output.
+* However, the `data[:config][:bioc_packages]` assignment is not shown in the provided code snippet, making it unclear what is being tested in the second test case.
+* Consider adding a brief description or context for each test case to improve readability.",`The if-statement condition should be reversed to correctly handle the 'opengl' option. Change 'if spec[:opengl]' to 'if '+opengl' in spec:' and swap the with/without logic.`,Style/StringLiterals: Prefer single-quoted strings when you don't need string interpolation or special symbols.,This is now a duplicate test.,AS,AS,IN,IN
+Just for a check. Do you really want to delete this?,"@@ -186,15 +186,6 @@ SUBGRAPH_ISOMORPHISM_BADARG_TEST(Throws if match count is negative) { invalid_argument); } -SUBGRAPH_ISOMORPHISM_BADARG_TEST(Throws if match count is positive) { - REQUIRE_THROWS_AS( - (this->check_subgraph_isomorphism<double_triangle_target_type, double_triangle_target_type>( - false, - isomorphism_kind::induced, - 1)), - unimplemented); -} - // SUBGRAPH_ISOMORPHISM_BADARG_TEST(Throws if semantic match is true) { // REQUIRE_THROWS_AS( // (this->check_subgraph_isomorphism<double_triangle_target_type, double_triangle_target_type>(","Code review:
+
+* Removed unnecessary test case that was not being executed.
+* The remaining test case is well-structured and clearly tests the intended behavior.
+* No major issues or suggestions for improvement.",The removed test case for a positive match count could be reinstated with a comment explaining why it was removed.,why are you removing this test?,Why is this removed?,AS,AS,IN,IN
+"I'd personally recommend having the demo check for error, unless it's worthless.","@@ -11,11 +11,10 @@ func main() { machine.I2C0.Configure(machine.I2CConfig{}) // Init BlinkM - machine.I2C0.WriteTo(0x09, []byte(o)) + machine.I2C0.WriteRegister(0x09, 'o', nil) version := []byte{0, 0} - machine.I2C0.WriteTo(0x09, []byte(Z)) - machine.I2C0.ReadFrom(0x09, version) + machine.I2C0.ReadRegister(0x09, 'Z', version) println(Firmware version:, string(version[0]), string(version[1])) count := 0","**Code Review**
+
+* The code is concise and readable.
+* The use of `WriteRegister` and `ReadRegister` is a good improvement over the original `WriteTo` and `ReadFrom` methods.
+* However, the variable names could be more descriptive (e.g. `firmwareVersion` instead of `version`).
+* The `count` variable is declared but not used. Consider removing it.","The code snippet appears to be simplified and now uses the `WriteRegister` and `ReadRegister` methods, which suggests that the logger mutex issue has been addressed.",`nil` can be removed here.,Why did you change this to a `ReadRegister`?,AS,AS,IN,IN
+"Having a second `configuration` arg seems kinda odd to me as an interface. It looks like you're just using it as a form of dependency injection for the tests, right? Part of what makes it seem weird is that it's leaked into all the other orderers where they don't use `configuration` at all. Instead, what do you think about accepting the configuration in `initialize` (and having it default to `RSpec.configuration` in the same way)? To me, the config feels like a bit of state the instance should hold onto rather than being given each time `order` is called. It also means the other orderers wouldn't need to take the odd second argument. Thoughts?","@@ -0,0 +1,14 @@ +module RSpec::Core::Ordering + class RandomOrdering + def order(items, configuration = RSpec.configuration) + Kernel.srand configuration.seed + ordering = items.shuffle + Kernel.srand # reset random generation + ordering + end + + def built_in? + true + end + end +end","**Code Review**
+
+* The code is concise and well-structured.
+* The use of `Kernel.srand` is correct, but it would be more explicit to use `Random.srand` for seeding the random number generator.
+* The `ordering` variable is not necessary, as `items.shuffle` returns a new shuffled array.
+* The `built_in?` method is a good addition, but it would be more accurate to call it `is_built_in?`.
+* The class and module names are descriptive and follow Ruby's naming conventions.","`Kernel.srand` is not necessary and can be removed. It's also unclear why `ordering = items.shuffle` is assigned to a variable, as it's immediately returned. Consider simplifying the method to `ordering = items.shuffle` and removing the `Kernel.srand` calls.",I wonder if we should make this take a random seed argument and not depend on the global one?,Should this be `Configuration.default`?,IN,IN,AS,AS
+the test was failing likely due to locale issue. had to increment the date by 1 to make it pass,"@@ -868,7 +868,7 @@ describe(date_utils, function() { }); it(should return the 4 2021 year week, () => { - const date = new Date(2021-01-18); + const date = new Date(2021-01-19); assert(getWeek(date) === 3); }); ","**Code Review**
+
+* The change from `2021-01-18` to `2021-01-19` is likely a bug fix, ensuring the function returns the correct week number for the given date.
+* The rest of the code appears to be a simple test case, which is clear and concise.","The change to `new Date(""2021-01-19"")` seems to be a minor adjustment to match the implementation, likely due to the guard condition `(a < b)` rather than `(a!== b)`.",why this change? it doesn't look related to your changes.,Why was this changed?,IN,IN,IN,IN
+"Just as a note: Is it possible that the select css class is the same as the hover one? If this is true we should choose a different style for the selection css class, to make it more clear to the user I think.","@@ -61,7 +61,11 @@ public final class MiniatureListWidget<E> extends ScrollPane { this.mappedElements = new MappedList<Element<E>, E>(items, value -> { Element newElement = converter.apply(value); - newElement.setOnMouseClicked(event -> setOnMouseClicked.accept(newElement, event)); + newElement.setOnMouseClicked(event -> { + unselectAll(); + setOnMouseClicked.accept(newElement, event); + select(newElement); + }); return newElement; });","**Code Review**
+
+* Removed inline lambda for `setOnMouseClicked` event handler, which makes the code harder to read. Consider extracting it into a separate method.
+* Introduced unnecessary variable `unselectAll()` call. Consider removing it to simplify the code.
+* Added `select(newElement)` call which may not be necessary depending on the class's behavior. Consider adding a comment to explain its purpose.","""Unnecessary `unselectAll()` call, as `select(newElement)` will likely re-select the newly selected element, causing no net change.""",Why not just move the logic of `setOnMouseClicked` into the `newElement` constructor?,We could use a method reference here.,IN,IN,IN,AS
+Please name it correctly as Beam ;),"@@ -20,6 +20,9 @@ namespace Nethermind.Blockchain { public interface ISyncConfig : IConfig { + [ConfigItem(Description = HMB Sync., DefaultValue = false)] + bool HmbSync { get; set; } + [ConfigItem(Description = If set to 'true' then the Fast Sync (eth/63) synchronization algorithm will be used., DefaultValue = false)] bool FastSync { get; set; } ","**Code Review**
+
+* Added two new properties to the `ISyncConfig` interface: `HmbSync` and `FastSync`.
+* `HmbSync` property has a description and default value, which is good for documentation.
+* `FastSync` property has a description, but its default value is not specified, which may cause confusion.
+* Consider adding a description for the `FastSync` property to clarify its purpose.
+* No other issues found.","The property `HmbSync` has a specific description, but this interface is used by all stores, which may not support HMB Sync. Consider making this description more generic or removing it altogether.",I'd remove this one.,Should we make the default true?,IN,IN,IN,AS
+"There can be multiple subrows, so it is not a good idea to use `id` there, as id should identify single unique element. Instead you could just add the id of whole table or of whole crash plugin view","@@ -1835,7 +1835,7 @@ window.CrashgroupView = countlyView.extend({ // `d` is the original data object for the row var str = ''; if (data) { - str += '<div class=datatablesubrow>' + + str += '<div id=crash-data-subrow class=datatablesubrow>' + '<div class=error_menu>' + '<div class=error-details-menu data-id=' + data._id + '>' + '<a class=right icon-button cly-button-menu-trigger></a>' +","**Code Review**
+
+* Added a unique `id` attribute to the subrow element for easier targeting.
+* No other changes, code is generally clean and readable.",Added an ID to the subrow element for improved accessibility and targeting.,why this id?,this id should be in a format of countly-id,IN,IN,IN,AS
