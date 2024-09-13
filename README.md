@@ -28,7 +28,9 @@ Note: we provide the example data, not the whole dataset.
 We provide three retriver files: gpm_retrieval, normal_retrieval and dpr_retrieval. 
 
 Our dpr code comes from: https://github.com/rizwan09/REDCODER/tree/main/SCODE-R
+
 In gpm_retrieval, gpm_code2embedding.py is to generate the retrieval results of gpm retrieval. (CodeBERT + cosine similarity)
+
 In normal_retrieval, code2embedding.py is to generate the retrieval results of normal retrieval. (CodeBERT + cosine similarity & gpm similarity)
 
 
@@ -38,7 +40,9 @@ We provide two generative methods: fine-tuning and direct inference.
 We apply the framework from: https://github.com/hiyouga/LLaMA-Factory/tree/main
 And we provide the json files for generator input: code_review_train.json, code_review_test.json, code_review_train_top1.json, code_review_test_top1.json.
 
-The difference of templates of fine-tuning and direct inference is finetuning need training, and direct inference does not. Here is an example template for fine-tuing. For specific details please refer to https://github.com/hiyouga/LLaMA-Factory/blob/main/examples/README.md
+The difference of templates of fine-tuning and direct inference is finetuning need training, and direct inference does not. For specific details please refer to https://github.com/hiyouga/LLaMA-Factory/blob/main/examples/README.md. 
+
+Here is an example template for fine-tuing. 
 ```bash
 CUDA_VISIBLE_DEVICES=0,1,2,3 llamafactory-cli train examples/train_lora/llama3_train_tf.yaml
 llamafactory-cli train examples/train_lora/llama3_predict_tf.yaml
