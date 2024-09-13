@@ -37,10 +37,14 @@ In normal_retrieval, code2embedding.py is to generate the retrieval results of n
 ## Generator
 
 We provide two generative methods: fine-tuning and direct inference.
+
 We apply the framework from: https://github.com/hiyouga/LLaMA-Factory/tree/main
+
 And we provide the json files for generator input: code_review_train.json, code_review_test.json, code_review_train_top1.json, code_review_test_top1.json.
 
-The difference of templates of fine-tuning and direct inference is finetuning need training, and direct inference does not. For specific details please refer to https://github.com/hiyouga/LLaMA-Factory/blob/main/examples/README.md. 
+The difference of templates of fine-tuning and direct inference is finetuning need training, and direct inference does not. 
+
+For specific details please refer to https://github.com/hiyouga/LLaMA-Factory/blob/main/examples/README.md. 
 
 Here is an example template for fine-tuing. 
 ```bash
