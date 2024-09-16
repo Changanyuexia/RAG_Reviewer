@@ -63,19 +63,14 @@ if __name__ == '__main__':
         review = row['review']
         top1_review = row['top_1']
         format = {
-            "instruction": "Please review the following code and provide a one-line code review comment in English:",
-            "input": f"{code}",
-            "output": f"{review}"
-        }
-        format = {
-            "instruction": f"You are a code reviewer. Could you please provide a concise review for following code snippet? Limit your review to 1 or 2 sentences, do not introduce any code details.",
+            "instruction": f"Your task is to write a concise code review for the given code snippet. Your output should only be a brief code review, no extra information.",
             "input": f"{code}",
             "output": f"{review}",
         }
         train_prompt.append(format)
 
         format = {
-            "instruction": f"You are a code reviewer. Could you please provide a concise review for following code snippet? Keep the format and content of your review similar to given example review: '{top1_review}'. Limit your review to 1 or 2 sentences, do not introduce any code details.",
+            "instruction": f"Here is an example code review: '{top1_review}'. Your task is to write a concise code review for the given code snippet. Your output should only be a brief code review, no extra information.",
             "input": f"{code}",
             "output": f"{review}",
         }
@@ -101,40 +96,14 @@ if __name__ == '__main__':
         code = row["code"]
         review = row["review"]
         top1_review = row["top_1"]
-
-        # vanilla prompt
         format = {
-            "instruction": "Please review the following code and provide a one-line code review comment in English:",
-            "input": f"{code}",
-            "output": f"{review}"
-        }
-
-        format = {
-            "instruction": f"You are a code reviewer. Could you please provide a concise review for following code snippet? Limit your review to 1 or 2 sentences, do not introduce any code details.",
+            "instruction": f"Your task is to write a concise code review for the given code snippet. Your output should only be a brief code review, no extra information.",
             "input": f"{code}",
             "output": f"{review}",
         }
         test_prompt.append(format)
-
-        # prompt with top1
-        # top1_content = train.iloc[top1]
-        # top1_code = top1_content["code"]
-        # top1_review = top1_content["review"]
-        # format = {
-        #   "instruction": f"Here is an example of a piece of code: {top1_code} and its review: {top1_review}. "
-        #             f"Please review the following code and provide a constructive code review comment:",
-        #   "input": f"{code}",
-        #   "output": f"{review}",
-        # }
-        # format = {
-        #    "instruction": "You are a code reviewer, referring to the similar code-comment pair to give a short review with the same length as the reference review in English.",
-        #    "reference code": f"{top1_code}",
-        #    "reference review": f"{top1_review}",
-        #    "input": f"{code}",
-        #    "output": f"{review}",
-        # }
         format = {
-            "instruction": f"You are a code reviewer. Could you please provide a concise review for following code snippet? Keep the format and content of your review similar to given example review: '{top1_review}'. Limit your review to 1 or 2 sentences, do not introduce any code details.",
+            "instruction": f"Here is an example code review: '{top1_review}'. Your task is to write a concise code review for the given code snippet. Your output should only be a brief code review, no extra information.",
             "input": f"{code}",
             "output": f"{review}",
         }
