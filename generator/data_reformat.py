@@ -20,9 +20,9 @@ import argparse
 
 def create_arg_parser():
     current_directory = os.getcwd()
-    train_default_path = os.path.join(current_directory, "../../retriever/gpm_retrieval/cc/train_top10.csv")
-    test_default_path = os.path.join(current_directory, "../../retriever/gpm_retrieval/cc/test_top10.csv")
-    save_path_default = os.path.join(current_directory, "prompt/cr/")
+    train_default_path = os.path.join(current_directory, "../retriever/gpm_retrieval/tf/train_top10.csv")
+    test_default_path = os.path.join(current_directory, "../retriever/gpm_retrieval/tf/test_top10.csv")
+    save_path_default = os.path.join(current_directory, "prompt/tf/")
 
     parser = argparse.ArgumentParser()
     parser.add_argument("-train", '--train', default=train_default_path,
